@@ -1,20 +1,32 @@
+import os
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.ingestion.cloner import clone_repository
 from app.parsing.repo_scanner import scan_repository
-from app.graph.builder import build_dependency_graph, get_file_level_view
-from app.agents.orchestrator import handle_user_question
+from app.graph.builder import (
+    build_dependency_graph,
+    get_file_level_view,
+    get_graph_summary,
+    generate_mermaid_diagram
+)
+from app.agents.orchestrator import route_and_execute_query
+from app.database.db import save_repo_metadata
 
 router = APIRouter()
 
-# Simple in-memory store: repo_name -> built graph
-# (Fine for a semester project demo; a real product would use a database/cache instead)
-GRAPH_STORE = {}
+# In-memory store: repo_name -> {graph, repo_data, metadata}
+REPO_STORE = {}
 
 
 class CloneRequest(BaseModel):
     repo_url: str
+
+
+class ChatRequest(BaseModel):
+    repo_name: str | None = None
+    message: str
+    file_path: str | None = None
 
 
 class QuestionRequest(BaseModel):
@@ -23,51 +35,11 @@ class QuestionRequest(BaseModel):
     function_name: str
     question: str
 
-class ChatRequest(BaseModel):
-    repo_name: str
-    message: str
-    file_path: str | None = None
 
+@router.get("/")
+def read_root():
+    return {"message": "GitImpact backend is running"}
 
-@router.post("/chat")
-def chat(request: ChatRequest):
-    graph = GRAPH_STORE.get(request.repo_name)
-    if graph is None:
-        return {"error": f"Repo '{request.repo_name}' not found."}
-
-    from app.parsing.python_parser import parse_python_file, get_all_function_sources
-    from app.agents.explainer_agent import explain_file, explain_code
-    from app.agents.impact_agent import explain_impact
-    from app.graph.traversal import find_impact
-
-    file_path = request.file_path
-    question_lower = request.message.lower()
-
-    # Try to detect which known function the user is asking about
-    target_function = None
-    if file_path:
-        parsed = parse_python_file(file_path)
-        for func in parsed["functions"]:
-            if func["name"].lower() in question_lower:
-                target_function = func["name"]
-                break
-
-    if not file_path:
-        return {"needs_file": True, "message": "Which file are you asking about?"}
-
-    if target_function:
-        if any(k in question_lower for k in ["break", "impact", "affect", "depend", "risk"]):
-            impact_data = find_impact(graph, f"{file_path}::{target_function}")
-            answer = explain_impact(f"{file_path}::{target_function}", impact_data)
-        else:
-            from app.parsing.python_parser import get_function_source
-            code = get_function_source(file_path, target_function)
-            answer = explain_code(code, target_function)
-    else:
-        all_functions = get_all_function_sources(file_path)
-        answer = explain_file(file_path, all_functions)
-
-    return {"answer": answer}
 
 @router.get("/health")
 def health_check():
@@ -77,45 +49,95 @@ def health_check():
 @router.post("/clone")
 def clone_and_analyze(request: CloneRequest):
     """
-    Clones the given repo, parses every file, builds the dependency
-    graph, and stores it in memory for later questions.
+    Clones the given GitHub repo, parses AST for supported files,
+    extracts directory structures, tech stack, README documentation,
+    and constructs the dependency graph.
     """
     try:
-        local_path = clone_repository(request.repo_url)
+        clone_result = clone_repository(request.repo_url)
     except ValueError as e:
         return {"error": str(e)}
 
+    local_path = clone_result["local_path"]
+    repo_name = clone_result["repo_name"]
+
     scan_result = scan_repository(local_path)
-    graph = build_dependency_graph(scan_result["code_files"])
+    scan_result["repo_name"] = repo_name
+    scan_result["owner"] = clone_result["owner"]
+    scan_result["repo_url"] = request.repo_url
 
-    repo_name = local_path.split("/")[-1]
-    GRAPH_STORE[repo_name] = graph
+    graph = build_dependency_graph(
+        scan_result["code_files"],
+        parsed_sql_files=scan_result.get("sql_files")
+    )
 
+    graph_summary = get_graph_summary(graph)
+    mermaid_diagram = generate_mermaid_diagram(graph)
     file_view = get_file_level_view(graph)
+
+    # Store in memory
+    REPO_STORE[repo_name] = {
+        "graph": graph,
+        "repo_data": scan_result,
+        "graph_summary": graph_summary,
+        "mermaid_diagram": mermaid_diagram,
+    }
+
+    # Persist metadata cache to SQLite
+    try:
+        save_repo_metadata(repo_name, clone_result["owner"], request.repo_url, scan_result)
+    except Exception as e:
+        print(f"[WARN] Failed to cache repo metadata to DB: {e}")
+
+    # Extract clean relative paths for frontend display
+    clean_file_nodes = [
+        os.path.relpath(n, local_path).replace("\\", "/") if local_path in n else os.path.basename(n)
+        for n in file_view.nodes
+    ]
 
     return {
         "repo_name": repo_name,
+        "owner": clone_result["owner"],
         "total_files_parsed": scan_result["total_code_files"],
         "total_sql_files": scan_result["total_sql_files"],
-        "file_level_nodes": list(file_view.nodes),
+        "tech_stack": scan_result["tech_stack"],
+        "entry_points": scan_result["entry_points"],
+        "directories": scan_result["directory_map"],
+        "file_level_nodes": clean_file_nodes,
         "file_level_edges": list(file_view.edges),
+        "graph_summary": graph_summary,
+        "mermaid_diagram": mermaid_diagram,
+        "readme_snippet": scan_result.get("readme_content", "")[:500]
     }
+
+
+@router.post("/chat")
+def chat(request: ChatRequest):
+    """
+    Unified conversational endpoint that handles:
+    - Pre-repo chit-chat & onboarding
+    - Entire repo explanations
+    - Directory mappings ('which directory does what?')
+    - File connections & architectural flows
+    - Specific file / function drill-down
+    - Change blast-radius impact analysis
+    """
+    repo_entry = REPO_STORE.get(request.repo_name) if request.repo_name else None
+    repo_data = repo_entry["repo_data"] if repo_entry else None
+    graph = repo_entry["graph"] if repo_entry else None
+
+    # Handle query
+    result = route_and_execute_query(request.message, repo_data, graph)
+    return result
 
 
 @router.post("/ask")
 def ask_question(request: QuestionRequest):
-    """
-    Answers a question about a specific function in a previously
-    cloned repo — either an explanation or a change-impact analysis.
-    """
-    graph = GRAPH_STORE.get(request.repo_name)
-    if graph is None:
-        return {"error": f"Repo '{request.repo_name}' not found. Clone it first using /clone."}
+    """Answers a legacy question about a specific function in a cloned repo."""
+    repo_entry = REPO_STORE.get(request.repo_name)
+    if not repo_entry:
+        return {"error": f"Repo '{request.repo_name}' not found. Please clone it first using /clone."}
 
-    answer = handle_user_question(
-        request.question,
-        request.file_path,
-        request.function_name,
-        graph
-    )
-    return {"answer": answer}
+    full_message = f"{request.question} in {request.file_path}::{request.function_name}"
+    result = route_and_execute_query(full_message, repo_entry["repo_data"], repo_entry["graph"])
+    return {"answer": result.get("answer")}

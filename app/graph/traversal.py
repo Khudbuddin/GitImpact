@@ -1,24 +1,34 @@
 import networkx as nx
 
+
 def find_impact(graph: nx.DiGraph, target_node: str) -> dict:
-    if target_node not in graph:
-        return {"error": f"Node '{target_node}' not found in the graph."}
+    """
+    Performs a reverse BFS traversal to identify all upstream dependents
+    (functions or files that call/import the target node).
+    """
+    clean_target = target_node.replace("\\", "/")
+    if clean_target not in graph:
+        # Fallback: check if target is an un-prefixed function name
+        matching_nodes = [n for n in graph.nodes if n.endswith(f"::{clean_target}") or n.endswith(clean_target)]
+        if matching_nodes:
+            clean_target = matching_nodes[0]
+        else:
+            return {"error": f"Node '{target_node}' not found in the dependency graph."}
 
     def relevant_predecessors(node):
-        """Only follow edges that represent real dependency (calls/imports),
-        not structural containment (a file containing a function)."""
+        """Only follow edges that represent real dependency (calls/imports)."""
         preds = []
         for pred in graph.predecessors(node):
             edge_data = graph.get_edge_data(pred, node)
-            if edge_data.get("relation") in ("calls", "imports"):
+            if edge_data and edge_data.get("relation") in ("calls", "imports"):
                 preds.append(pred)
         return preds
 
-    direct_dependents = relevant_predecessors(target_node)
+    direct_dependents = relevant_predecessors(clean_target)
 
     all_dependents = {}
     visited = set()
-    queue = [(target_node, 0)]
+    queue = [(clean_target, 0)]
 
     while queue:
         current_node, distance = queue.pop(0)
@@ -32,28 +42,41 @@ def find_impact(graph: nx.DiGraph, target_node: str) -> dict:
                 queue.append((predecessor, distance + 1))
 
     return {
-        "target": target_node,
-        "target_type": graph.nodes[target_node].get("type"),
+        "target": clean_target,
+        "target_type": graph.nodes[clean_target].get("type", "unknown"),
         "direct_dependents": direct_dependents,
         "all_dependents": [
-            {"node": node, "distance": dist, "type": graph.nodes[node].get("type")}
+            {"node": node, "distance": dist, "type": graph.nodes[node].get("type", "unknown")}
             for node, dist in sorted(all_dependents.items(), key=lambda x: x[1])
         ],
         "total_affected": len(all_dependents)
     }
 
 
-if __name__ == "__main__":
-    from app.parsing.python_parser import parse_python_file
-    from app.graph.builder import build_dependency_graph
+def get_file_connections_summary(graph: nx.DiGraph, file_path: str) -> dict:
+    """Finds all incoming and outgoing connections for a specific file."""
+    clean_file = file_path.replace("\\", "/")
+    if clean_file not in graph:
+        return {"error": f"File '{file_path}' not found in graph."}
 
-    files_to_test = ["app/ingestion/cloner.py", "app/parsing/python_parser.py"]
-    parsed_data = [parse_python_file(f) for f in files_to_test]
-    g = build_dependency_graph(parsed_data)
+    imported_by = [
+        pred for pred in graph.predecessors(clean_file)
+        if graph.get_edge_data(pred, clean_file, {}).get("relation") == "imports"
+    ]
 
-    # Test: what breaks if we change get_text?
-    target = "app/parsing/python_parser.py::get_text"
-    result = find_impact(g, target)
+    imports_files = [
+        succ for succ in graph.successors(clean_file)
+        if graph.get_edge_data(clean_file, succ, {}).get("relation") == "imports"
+    ]
 
-    import json
-    print(json.dumps(result, indent=2))
+    contained_functions = [
+        succ for succ in graph.successors(clean_file)
+        if graph.get_edge_data(clean_file, succ, {}).get("relation") == "contains"
+    ]
+
+    return {
+        "file": clean_file,
+        "imported_by": imported_by,
+        "imports_files": imports_files,
+        "contained_functions": contained_functions
+    }

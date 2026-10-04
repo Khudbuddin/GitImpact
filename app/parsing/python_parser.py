@@ -13,6 +13,7 @@ def parse_python_file(file_path: str) -> dict:
     - imports
     - function calls, tagged with WHICH function they occurred inside
     """
+    norm_path = file_path.replace("\\", "/")
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         source_code = f.read()
 
@@ -21,7 +22,7 @@ def parse_python_file(file_path: str) -> dict:
     root_node = tree.root_node
 
     result = {
-        "file": file_path,
+        "file": norm_path,
         "functions": [],
         "classes": [],
         "imports": [],
@@ -54,7 +55,7 @@ def parse_python_file(file_path: str) -> dict:
 
         elif node.type in ("import_statement", "import_from_statement"):
             result["imports"].append({
-                "text": get_text(node),
+                "text": get_text(node).strip(),
                 "line": node.start_point[0] + 1
             })
 
@@ -74,7 +75,7 @@ def parse_python_file(file_path: str) -> dict:
     return result
 
 
-def get_function_source(file_path: str, function_name: str) -> str:
+def get_function_source(file_path: str, function_name: str) -> str | None:
     """Returns the exact source code text of a specific function, by name."""
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         source_code = f.read()
@@ -98,6 +99,7 @@ def get_function_source(file_path: str, function_name: str) -> str:
     walk(root_node)
     return found["text"]
 
+
 def get_all_function_sources(file_path: str) -> list:
     """Returns the name + source code of every function in a file."""
     parsed = parse_python_file(file_path)
@@ -107,6 +109,7 @@ def get_all_function_sources(file_path: str) -> list:
         if source:
             results.append({"name": func["name"], "source": source})
     return results
+
 
 if __name__ == "__main__":
     import json
