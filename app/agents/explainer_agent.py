@@ -279,3 +279,47 @@ CRITICAL: ONLY mention the real files in the directories above.
 Instruction on length: {length_rule}
 """
     return run_completion(prompt, max_tokens=850, temperature=0.2)
+
+
+def explain_file(file_path: str, all_functions: list, length_mode: str = "normal") -> str:
+    """Explains an entire code file and its functions."""
+    length_rule = get_length_instruction(length_mode)
+    if not all_functions:
+        return f"The file `{file_path}` contains no standalone user-defined functions (it may contain configuration, global constants, or script execution statements)."
+
+    shown = all_functions[:8]
+    combined_code = "\n\n".join(f"# Function: {f['name']}\n{f['source']}" for f in shown)
+
+    prompt = f"""You are explaining the code file `{file_path}` to a developer.
+
+Here are the user-defined functions in this file:
+{combined_code}
+
+Task:
+Explain the overall purpose of `{file_path}`:
+1. What role this file plays in the application architecture.
+2. What each user-defined function does and how they work together.
+3. What other modules or functions it relies on.
+
+Instruction on length: {length_rule}
+Format with clean GitHub Markdown.
+"""
+    tokens = 400 if length_mode == "concise" else 1100
+    return run_completion(prompt, max_tokens=tokens, temperature=0.2)
+
+
+def explain_code(code_snippet: str, name: str, length_mode: str = "normal") -> str:
+    """Explains a single function or code snippet."""
+    length_rule = get_length_instruction(length_mode)
+    prompt = f"""Explain what the following function does in plain English.
+
+Function name: {name}
+
+Code:
+{code_snippet}
+
+Instruction on length: {length_rule}
+Do not repeat the code itself, explain its behavior, inputs, and outputs clearly.
+"""
+    tokens = 300 if length_mode == "concise" else 750
+    return run_completion(prompt, max_tokens=tokens, temperature=0.2)
