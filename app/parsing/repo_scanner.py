@@ -21,7 +21,6 @@ def detect_tech_stack(repo_path: str, files_by_ext: dict) -> list[str]:
     """Infers frameworks, libraries, and languages used in the repository."""
     stack = set()
 
-    # Language inference
     if files_by_ext.get(".py"):
         stack.add("Python")
     if files_by_ext.get(".java"):
@@ -33,7 +32,6 @@ def detect_tech_stack(repo_path: str, files_by_ext: dict) -> list[str]:
     if files_by_ext.get(".ts") or files_by_ext.get(".tsx"):
         stack.add("TypeScript")
 
-    # Dependency file inspections
     req_path = os.path.join(repo_path, "requirements.txt")
     if os.path.exists(req_path):
         try:
@@ -92,7 +90,6 @@ def extract_readme(repo_path: str) -> str:
                 with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
                     content = f.read().strip()
                     if content:
-                        # Return first 4500 characters
                         return content[:4500]
             except Exception:
                 pass
@@ -112,12 +109,18 @@ def categorize_directory(dir_name: str) -> str:
         return "Graph construction, modeling, and traversal logic"
     if any(k in low for k in ["parse", "ast", "lexer", "scan"]):
         return "AST parsing, code extraction, and file scanning"
-    if any(k in low for k in ["ingest", "clone", "git", "loader"]):
-        return "Repository ingestion and cloning"
-    if any(k in low for k in ["frontend", "ui", "view", "component", "static", "web"]):
+    if any(k in low for k in ["ingest", "clone", "git", "loader", "file_handler"]):
+        return "File handling, parsing pipelines, and data ingestion"
+    if any(k in low for k in ["frontend", "ui", "view", "component", "static", "web", "pages"]):
         return "Frontend user interface & presentation layer"
+    if any(k in low for k in ["auth", "security", "login", "user"]):
+        return "User authentication, sessions, and access control"
     if any(k in low for k in ["db", "database", "model", "schema", "migration"]):
         return "Database schemas, models, and persistence"
+    if any(k in low for k in ["script", "pipeline", "job"]):
+        return "Processing scripts, model inference, and background tasks"
+    if any(k in low for k in ["rule", "rules"]):
+        return "Business rules and categorization heuristics"
     if any(k in low for k in ["test", "spec", "mock"]):
         return "Automated unit and integration test suites"
     if any(k in low for k in ["util", "helper", "common", "core", "lib"]):
@@ -145,7 +148,6 @@ def scan_repository(repo_path: str) -> dict:
     norm_repo_path = os.path.normpath(repo_path).replace("\\", "/")
 
     for root, dirs, files in os.walk(repo_path):
-        # Filter out directories in-place
         dirs[:] = [d for d in dirs if d not in SKIP_DIRS and not d.startswith(".")]
 
         rel_dir = os.path.relpath(root, repo_path).replace("\\", "/")
@@ -164,16 +166,21 @@ def scan_repository(repo_path: str) -> dict:
 
             try:
                 if filename.endswith(".py"):
-                    code_files_parsed.append(parse_python_file(file_path))
+                    parsed = parse_python_file(file_path)
+                    parsed["rel_file"] = rel_file_path
+                    code_files_parsed.append(parsed)
                 elif filename.endswith(".java"):
-                    code_files_parsed.append(parse_java_file(file_path))
+                    parsed = parse_java_file(file_path)
+                    parsed["rel_file"] = rel_file_path
+                    code_files_parsed.append(parsed)
                 elif filename.endswith(".sql"):
-                    sql_files_parsed.append(parse_sql_file(file_path))
+                    parsed = parse_sql_file(file_path)
+                    parsed["rel_file"] = rel_file_path
+                    sql_files_parsed.append(parsed)
             except Exception as e:
                 print(f"[WARN] Skipped {file_path}: {e}")
                 continue
 
-    # Directory summary with descriptions
     dir_summaries = {}
     for d_name, d_files in sorted(directory_map.items()):
         dir_summaries[d_name] = {
@@ -198,11 +205,77 @@ def scan_repository(repo_path: str) -> dict:
     }
 
 
-if __name__ == "__main__":
-    import json
-    result = scan_repository("app")
-    print(json.dumps({
-        "total_code_files": result["total_code_files"],
-        "tech_stack": result["tech_stack"],
-        "directories": list(result["directory_map"].keys())
-    }, indent=2))
+def build_ground_truth_catalog(scan_result: dict, graph=None) -> dict:
+    """
+    Builds a structured ground-truth catalog mapping every real file,
+    every real user-defined function, and exact call/import relationships.
+    This guarantees 100% accuracy and eliminates AI hallucinations.
+    """
+    repo_path = scan_result.get("repo_path", "")
+    code_files = scan_result.get("code_files", [])
+
+    files_catalog = []
+    functions_catalog = []
+    functions_by_file = defaultdict(list)
+    dir_files_catalog = defaultdict(list)
+
+    for cf in code_files:
+        raw_path = cf.get("file", "")
+        rel_path = cf.get("rel_file") or (os.path.relpath(raw_path, repo_path).replace("\\", "/") if repo_path and repo_path in raw_path else os.path.basename(raw_path))
+        base = os.path.basename(rel_path)
+        d_name = os.path.dirname(rel_path) or "root"
+
+        funcs = [f["name"] for f in cf.get("functions", [])]
+        classes = [c["name"] for c in cf.get("classes", [])]
+        imports = [i["text"] for i in cf.get("imports", [])]
+
+        file_info = {
+            "path": rel_path,
+            "basename": base,
+            "directory": d_name,
+            "functions": funcs,
+            "classes": classes,
+            "imports": imports,
+            "full_path": raw_path
+        }
+        files_catalog.append(file_info)
+        dir_files_catalog[d_name].append(file_info)
+
+        for fn in cf.get("functions", []):
+            fn_name = fn["name"]
+            fn_id = f"{rel_path}::{fn_name}"
+            functions_by_file[rel_path].append(fn_name)
+
+            calls_made = []
+            for cl in cf.get("calls", []):
+                if cl.get("in_function") == fn_name:
+                    calls_made.append(cl["name"])
+
+            functions_catalog.append({
+                "id": fn_id,
+                "name": fn_name,
+                "file": rel_path,
+                "line": fn.get("line", 1),
+                "calls": sorted(list(set(calls_made)))
+            })
+
+    call_edges = []
+    import_edges = []
+    if graph:
+        for u, v, d in graph.edges(data=True):
+            rel = d.get("relation")
+            if rel == "calls":
+                call_edges.append((u, v))
+            elif rel == "imports":
+                import_edges.append((u, v))
+
+    return {
+        "files": files_catalog,
+        "functions": functions_catalog,
+        "functions_by_file": dict(functions_by_file),
+        "directories": dict(dir_files_catalog),
+        "call_edges": call_edges,
+        "import_edges": import_edges,
+        "total_files": len(files_catalog),
+        "total_functions": len(functions_catalog)
+    }

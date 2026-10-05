@@ -95,6 +95,9 @@ def clone_and_analyze(request: CloneRequest):
         for n in file_view.nodes
     ]
 
+    from app.parsing.repo_scanner import build_ground_truth_catalog
+    catalog = build_ground_truth_catalog(scan_result, graph)
+
     return {
         "repo_name": repo_name,
         "owner": clone_result["owner"],
@@ -107,6 +110,7 @@ def clone_and_analyze(request: CloneRequest):
         "file_level_edges": list(file_view.edges),
         "graph_summary": graph_summary,
         "mermaid_diagram": mermaid_diagram,
+        "catalog": catalog,
         "readme_snippet": scan_result.get("readme_content", "")[:500]
     }
 

@@ -28,6 +28,8 @@ wheels/
 # Cloned repositories & data
 data/cloned_repos/
 data/temp/
+data/*.db
+*.db
 
 # Environment Variables
 .env
