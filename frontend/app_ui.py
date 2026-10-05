@@ -7,7 +7,7 @@ from pyvis.network import Network
 
 BACKEND_URL = "http://127.0.0.1:8000"
 
-# Configure wide, expansive layout with collapsed sidebar for maximum screen estate
+# --- PAGE CONFIGURATION (WIDE, NO SIDEBAR) ---
 st.set_page_config(
     page_title="GitImpact | Codebase Intelligence Studio",
     page_icon="⚡",
@@ -15,102 +15,124 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom High-End SaaS Theme — Obsidian, Electric Cyan & Indigo
+# --- MODERN ENTERPRISE SAAS STYLING ---
 st.markdown("""
 <style>
     /* Global Base */
     .stApp {
-        background-color: #070a12;
+        background-color: #070a13;
         color: #f8fafc;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
     }
 
-    /* Hide default Streamlit sidebar toggle clutter if desired */
-    [data-testid="stSidebar"] {
-        display: none;
+    /* Total Removal of Streamlit Sidebar */
+    [data-testid="stSidebar"], [data-testid="collapsedControl"] {
+        display: none !important;
     }
 
-    /* Executive Top Bar */
+    /* Screen-wide container with generous padding */
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 3rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        max-width: 100% !important;
+    }
+
+    /* Top Executive Header Bar */
     .top-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: linear-gradient(90deg, #0f172a 0%, #161f36 50%, #0f172a 100%);
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        border-radius: 12px;
+        background: linear-gradient(90deg, #0d1322 0%, #151d32 50%, #0d1322 100%);
+        border: 1px solid rgba(99, 102, 241, 0.22);
+        border-radius: 14px;
         padding: 14px 28px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+        margin-bottom: 22px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
     }
     .brand-title {
-        font-size: 1.5rem;
+        font-size: 1.45rem;
         font-weight: 800;
         background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         letter-spacing: -0.02em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .brand-sub {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #94a3b8;
+        letter-spacing: 0;
+        margin-left: 6px;
     }
     .status-badge-online {
         background: rgba(16, 185, 129, 0.12);
         color: #34d399;
-        border: 1px solid rgba(16, 185, 129, 0.3);
+        border: 1px solid rgba(16, 185, 129, 0.35);
         padding: 5px 14px;
         border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .status-badge-offline {
-        background: rgba(239, 68, 68, 0.12);
-        color: #f87171;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        padding: 5px 14px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-
-    /* Full-Width Project Control Bar */
-    .project-banner {
-        background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        padding: 16px 24px;
-        margin-bottom: 20px;
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-    }
-    .project-info-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #f1f5f9;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .pill-metric {
-        background: #1e293b;
-        color: #94a3b8;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 6px 14px;
         font-size: 0.82rem;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 6px;
     }
-    .pill-metric strong {
+    .status-badge-offline {
+        background: rgba(239, 68, 68, 0.12);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.35);
+        padding: 5px 14px;
+        border-radius: 20px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Active Project Metadata Bar */
+    .repo-active-bar {
+        background: #0d1322;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 16px 24px;
+        margin-bottom: 22px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .repo-active-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #f8fafc;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .metric-badge {
+        background: #151d32;
+        color: #94a3b8;
+        border: 1px solid #233152;
+        border-radius: 8px;
+        padding: 7px 14px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .metric-badge strong {
         color: #38bdf8;
     }
-    .tech-tag {
-        background: rgba(99, 102, 241, 0.15);
-        color: #a5b4fc;
+    .tech-pill {
+        background: rgba(99, 102, 241, 0.16);
+        color: #c7d2fe;
         border: 1px solid rgba(99, 102, 241, 0.35);
         border-radius: 12px;
         padding: 3px 10px;
@@ -118,101 +140,124 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* Wide Tabs Styling */
+    /* WIDE EXECUTIVE TABS COMPONENT */
     .stTabs [data-baseweb="tab-list"] {
-        width: 100%;
-        display: flex;
-        justify-content: space-around;
-        background-color: #0d1322;
-        padding: 8px 12px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        margin-bottom: 20px;
+        width: 100% !important;
+        display: flex !important;
+        background-color: #0b0f19 !important;
+        padding: 6px !important;
+        border-radius: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        margin-bottom: 24px !important;
+        gap: 8px !important;
     }
     .stTabs [data-baseweb="tab"] {
-        flex: 1;
-        text-align: center;
-        border-radius: 8px;
-        color: #94a3b8;
-        font-weight: 600;
-        font-size: 0.95rem;
-        padding: 12px 20px;
-        transition: all 0.2s ease;
+        flex: 1 !important;
+        height: 52px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+        border-radius: 10px !important;
+        color: #94a3b8 !important;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        padding: 0 20px !important;
+        transition: all 0.25s ease !important;
+        border: 1px solid transparent !important;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        color: #f1f5f9;
-        background-color: rgba(255, 255, 255, 0.03);
+        color: #f8fafc !important;
+        background: rgba(255, 255, 255, 0.04) !important;
     }
     .stTabs [aria-selected="true"] {
         background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%) !important;
-        color: #c7d2fe !important;
-        border: 1px solid rgba(99, 102, 241, 0.5) !important;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+        color: #ffffff !important;
+        border: 1px solid rgba(129, 140, 248, 0.5) !important;
+        box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
     }
 
-    /* Hero Search Card */
-    .hero-card {
-        background: radial-gradient(circle at 10% 20%, #1e1b4b 0%, #0f172a 60%, #070a12 100%);
-        border: 1px solid rgba(99, 102, 241, 0.3);
+    /* Hero Search Screen */
+    .hero-container {
+        background: radial-gradient(circle at 10% 20%, #1e1b4b 0%, #0d1322 65%, #070a13 100%);
+        border: 1px solid rgba(99, 102, 241, 0.25);
         border-radius: 16px;
-        padding: 40px 48px;
+        padding: 46px 40px;
         margin-bottom: 28px;
-        box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.6);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
         text-align: center;
     }
     .hero-title {
-        font-size: 2.4rem;
+        font-size: 2.5rem;
         font-weight: 800;
         letter-spacing: -0.03em;
-        background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
-    .hero-desc {
+    .hero-subtitle {
         font-size: 1.1rem;
         color: #94a3b8;
-        max-width: 780px;
-        margin: 0 auto 24px auto;
+        max-width: 800px;
+        margin: 0 auto 28px auto;
         line-height: 1.6;
     }
-
-    /* Feature Highlights in Hero */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 32px;
+        text-align: left;
+    }
     .feature-card {
         background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.07);
         border-radius: 12px;
         padding: 20px;
-        text-align: left;
     }
     .feature-card h4 {
         color: #38bdf8;
+        font-size: 1rem;
         margin-top: 0;
-        font-size: 1.05rem;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     .feature-card p {
         color: #94a3b8;
         font-size: 0.85rem;
-        margin-bottom: 0;
         line-height: 1.5;
+        margin: 0;
     }
 
     /* Message Bubbles */
     .stChatMessage {
-        border-radius: 12px;
-        margin-bottom: 14px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px !important;
+        margin-bottom: 14px !important;
+        border: 1px solid rgba(255, 255, 255, 0.06) !important;
+        background-color: #0d1322 !important;
+    }
+
+    /* Buttons */
+    .stButton>button {
+        border-radius: 9px !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Session State Initialization
+
+# --- STATE INITIALIZATION ---
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
             "content": (
-                "👋 **Welcome to GitImpact Intelligence Studio!**\n\n"
+                "👋 **Welcome to GitImpact Codebase Intelligence Studio!**\n\n"
                 "I am your AI codebase intelligence assistant. You can chat freely with me, or paste any "
                 "public **GitHub repository link** above to automatically build real AST dependency graphs, "
                 "trace function-level execution pipelines, and simulate change blast radius."
@@ -230,6 +275,7 @@ if "quick_prompt" not in st.session_state:
     st.session_state.quick_prompt = None
 
 
+# --- HELPER FUNCTIONS ---
 def check_backend_health() -> bool:
     try:
         resp = requests.get(f"{BACKEND_URL}/health", timeout=2)
@@ -250,30 +296,30 @@ def extract_github_url(text: str) -> str:
 
 def trigger_clone_analysis(url: str):
     clean_url = extract_github_url(url)
-    with st.spinner(f"📥 Cloning & AST Parsing **{clean_url}**..."):
+    with st.spinner(f"📥 Cloning repository & parsing AST for **{clean_url}**..."):
         try:
             response = requests.post(f"{BACKEND_URL}/clone", json={"repo_url": clean_url}, timeout=150)
             if response.status_code != 200:
                 return {"error": f"Server error {response.status_code}: {response.text}"}
             return response.json()
         except requests.exceptions.RequestException as e:
-            return {"error": f"Failed to connect to backend: {e}. Ensure FastAPI is running on port 8000."}
+            return {"error": f"Failed to connect to backend: {e}. Please ensure FastAPI is running on port 8000."}
 
 
 def render_interactive_graph(edges: list, nodes: list, graph_type="files"):
-    """Builds a wide physics-based interactive HTML graph using PyVis."""
-    net = Network(height="650px", width="100%", bgcolor="#070a12", font_color="#f8fafc", directed=True)
-    net.force_atlas_2based(gravity=-55, central_gravity=0.015, spring_length=130, damping=0.9)
+    """Renders a wide, interactive physics graph with PyVis."""
+    net = Network(height="670px", width="100%", bgcolor="#070a13", font_color="#f8fafc", directed=True)
+    net.force_atlas_2based(gravity=-60, central_gravity=0.015, spring_length=140, damping=0.9)
 
     added_nodes = set()
     for n in nodes:
         label = os.path.basename(n.split("::")[0])
         if "::" in n:
             label += f"\n({n.split('::')[-1]})"
-            color = "#10b981"  # emerald
+            color = "#10b981"  # Emerald for functions
             size = 15
         else:
-            color = "#06b6d4"  # cyan
+            color = "#06b6d4"  # Cyan for files
             size = 22
 
         net.add_node(n, label=label, title=n, color=color, size=size)
@@ -285,67 +331,90 @@ def render_interactive_graph(edges: list, nodes: list, graph_type="files"):
 
     try:
         html = net.generate_html()
-        components.html(html, height=670, scrolling=True)
+        components.html(html, height=690, scrolling=True)
     except Exception as e:
         st.warning(f"Could not render interactive graph: {e}")
 
 
-# --- TOP EXECUTIVE NAVIGATION BAR ---
+# --- TOP EXECUTIVE NAVIGATION HEADER ---
 backend_online = check_backend_health()
 status_html = (
     '<div class="status-badge-online">🟢 Engine Online (Port 8000)</div>'
     if backend_online else
-    '<div class="status-badge-offline">🔴 Backend Offline — Run: uvicorn app.main:app --port 8000</div>'
+    '<div class="status-badge-offline">🔴 Backend Offline — Ensure uvicorn is running</div>'
 )
 
 st.markdown(f"""
 <div class="top-header">
-    <div class="brand-title">⚡ GitImpact <span style="font-size:0.85rem; font-weight:500; color:#94a3b8;">Codebase Intelligence Studio</span></div>
+    <div class="brand-title">
+        ⚡ GitImpact <span class="brand-sub">Codebase Intelligence Studio</span>
+    </div>
     {status_html}
 </div>
 """, unsafe_allow_html=True)
 
 
-# --- REPOSITORY HEADER OR HERO BANNER ---
+# --- REPOSITORY HEADER OR CLEAN HERO SEARCH ---
 if st.session_state.repo_data:
     data = st.session_state.repo_data
-    col_b1, col_b2 = st.columns([4, 1])
+    col_bar_info, col_bar_btn = st.columns([5, 1])
 
-    with col_b1:
-        tech_tags = "".join([f'<span class="tech-tag">{t}</span> ' for t in data.get("tech_stack", [])])
+    with col_bar_info:
+        tech_tags = "".join([f'<span class="tech-pill">{t}</span> ' for t in data.get("tech_stack", [])])
         st.markdown(f"""
-        <div class="project-banner">
+        <div class="repo-active-bar">
             <div>
-                <div class="project-info-title">📦 {data['repo_name']} <span style="font-size:0.85rem; color:#94a3b8; font-weight:400;">by {data.get('owner', 'Unknown')}</span></div>
+                <div class="repo-active-title">
+                    📦 {data['repo_name']} <span style="font-size:0.85rem; color:#94a3b8; font-weight:400;">by {data.get('owner', 'Unknown')}</span>
+                </div>
                 <div style="margin-top: 8px;">{tech_tags}</div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <div class="pill-metric">📁 Files: <strong>{data.get('total_files_parsed', 0)}</strong></div>
-                <div class="pill-metric">⚙️ Functions: <strong>{data.get('graph_summary', {}).get('total_functions', 0)}</strong></div>
-                <div class="pill-metric">📦 Imports: <strong>{data.get('graph_summary', {}).get('total_imports', 0)}</strong></div>
-                <div class="pill-metric">🔗 Calls: <strong>{data.get('graph_summary', {}).get('total_calls', 0)}</strong></div>
+                <div class="metric-badge">📁 Files: <strong>{data.get('total_files_parsed', 0)}</strong></div>
+                <div class="metric-badge">⚙️ Functions: <strong>{data.get('graph_summary', {}).get('total_functions', 0)}</strong></div>
+                <div class="metric-badge">📦 Imports: <strong>{data.get('graph_summary', {}).get('total_imports', 0)}</strong></div>
+                <div class="metric-badge">🔗 Calls: <strong>{data.get('graph_summary', {}).get('total_calls', 0)}</strong></div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
-    with col_b2:
+    with col_bar_btn:
+        st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
         if st.button("🔄 Switch Project", use_container_width=True, type="secondary"):
             st.session_state.repo_data = None
             st.session_state.repo_name = None
             st.session_state.messages.append({
                 "role": "assistant",
-                "content": "Repository cleared. Ready to analyze a new project or continue chatting!"
+                "content": "Repository cleared. Ready to analyze any new public GitHub project!"
             })
             st.rerun()
 
 else:
-    # Full Width Hero State
+    # Clean, Universal Hero State — No Hardcoded Repos
     st.markdown("""
-    <div class="hero-card">
+    <div class="hero-container">
         <div class="hero-title">Deep Codebase Intelligence in Seconds</div>
-        <div class="hero-desc">
-            Paste any GitHub repository link to extract real Abstract Syntax Tree (AST) dependency graphs,
-            trace exact function-to-function execution pipelines, and simulate change blast radius with zero hallucinations.
+        <div class="hero-subtitle">
+            Paste any public GitHub repository to parse real Abstract Syntax Trees (AST), map module dependencies,
+            trace concrete function call pipelines, and simulate change blast radius with zero hallucinations.
+        </div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🌳 AST-Grounded Mapping</h4>
+                <p>Extracts concrete AST nodes for Python and Java, mapping real imports and user-defined functions.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🕸️ Interactive Topology</h4>
+                <p>Explore physics-based force-directed dependency graphs at both file and function granularity.</p>
+            </div>
+            <div class="feature-card">
+                <h4>💥 Blast Radius Simulator</h4>
+                <p>Run reverse-BFS graph traversal to identify every file and function that breaks before you modify code.</p>
+            </div>
+            <div class="feature-card">
+                <h4>💬 Grounded AI Explainer</h4>
+                <p>Ask freeform questions with 100% factual answers grounded strictly in the parsed codebase catalog.</p>
+            </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -354,23 +423,11 @@ else:
     with col_in:
         repo_input = st.text_input(
             "Repository URL",
-            placeholder="Paste public GitHub URL (e.g. https://github.com/Khudbuddin/Smart-Expense-Categorizer)",
+            placeholder="Paste public GitHub repository link (e.g. https://github.com/owner/repository)",
             label_visibility="collapsed"
         )
     with col_btn:
-        analyze_clicked = st.button("🚀 Analyze Repo", use_container_width=True, type="primary")
-
-    # Quick Demo Buttons
-    st.markdown("<p style='color:#94a3b8; font-size:0.85rem; margin-top:8px;'>💡 <strong>Quick Demos:</strong> Click to analyze instantly:</p>", unsafe_allow_html=True)
-    col_d1, col_d2, col_d3 = st.columns([1, 1, 3])
-    with col_d1:
-        if st.button("📦 Smart-Expense-Categorizer", use_container_width=True):
-            st.session_state.quick_prompt = "https://github.com/Khudbuddin/Smart-Expense-Categorizer"
-            st.rerun()
-    with col_d2:
-        if st.button("🔮 vedaz-ai", use_container_width=True):
-            st.session_state.quick_prompt = "https://github.com/Khudbuddin/vedaz-ai"
-            st.rerun()
+        analyze_clicked = st.button("🚀 Analyze Repository", use_container_width=True, type="primary")
 
     if analyze_clicked and repo_input:
         st.session_state.quick_prompt = repo_input
@@ -379,12 +436,12 @@ else:
     st.markdown("<br>", unsafe_allow_html=True)
 
 
-# --- 4 WIDE TABS WORKSPACE ---
+# --- 4 FULL-WIDTH WIDE TABS ---
 if st.session_state.repo_data:
     tab_chat, tab_graph, tab_inspect, tab_impact = st.tabs([
-        "💬 Intelligence Chat",
-        "🕸️ Interactive Graph",
-        "📂 Code & Function Explorer",
+        "💬 AI Intelligence Chat",
+        "🕸️ Interactive Dependency Graph",
+        "📂 Codebase & Function Explorer",
         "💥 Change Blast-Radius Simulator"
     ])
 else:
@@ -395,12 +452,11 @@ else:
 
 
 # ==========================================
-# TAB 1: INTELLIGENCE CHAT (WIDE)
+# TAB 1: AI INTELLIGENCE CHAT (WIDE)
 # ==========================================
 with tab_chat:
-    # If a repo is active, show quick action prompt pills right above the chat
     if st.session_state.repo_data:
-        st.markdown("<p style='color:#94a3b8; font-size:0.85rem; margin-bottom:6px;'>⚡ <strong>Quick Intelligence Prompts:</strong></p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#94a3b8; font-size:0.85rem; margin-bottom:8px;'>⚡ <strong>Quick Intelligence Prompts:</strong></p>", unsafe_allow_html=True)
         col_p1, col_p2, col_p3, col_p4 = st.columns(4)
         with col_p1:
             if st.button("📌 Project Architecture", use_container_width=True):
@@ -411,8 +467,8 @@ with tab_chat:
                 st.session_state.quick_prompt = "Which directory does what? Explain the folder structure."
                 st.rerun()
         with col_p3:
-            if st.button("🔗 Function Pipelines & Flow", use_container_width=True):
-                st.session_state.quick_prompt = "How are files connected and how does data flow between functions?"
+            if st.button("🌳 Function Call Hierarchy", use_container_width=True):
+                st.session_state.quick_prompt = "Give me the tree chart or anything that shows how functions connected"
                 st.rerun()
         with col_p4:
             if st.button("📑 Explain All Files One-by-One", use_container_width=True):
@@ -427,10 +483,10 @@ with tab_chat:
         with st.chat_message(msg["role"], avatar=avatar):
             st.markdown(msg["content"])
             if msg.get("diagram"):
-                with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=False):
-                    st.code(msg["diagram"], language="mermaid")
+                with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=True):
+                    st.markdown(f"```mermaid\n{msg['diagram']}\n```")
 
-    user_input = st.chat_input("Ask anything about this codebase (or paste a GitHub URL)...")
+    user_input = st.chat_input("Ask anything about this codebase (or paste a GitHub repository URL)...")
 
     if st.session_state.quick_prompt:
         prompt_to_process = st.session_state.quick_prompt
@@ -480,6 +536,9 @@ with tab_chat:
                         diag = data.get("mermaid_diagram")
 
                 st.markdown(reply)
+                if diag:
+                    with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=True):
+                        st.markdown(f"```mermaid\n{diag}\n```")
                 st.session_state.messages.append({"role": "assistant", "content": reply, "diagram": diag})
                 st.rerun()
 
@@ -504,24 +563,24 @@ with tab_chat:
 
                 st.markdown(reply)
                 if diag:
-                    with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=False):
-                        st.code(diag, language="mermaid")
+                    with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=True):
+                        st.markdown(f"```mermaid\n{diag}\n```")
 
                 st.session_state.messages.append({"role": "assistant", "content": reply, "diagram": diag})
 
 
 # ==========================================
-# TAB 2: INTERACTIVE GRAPH (FULL 100% WIDTH)
+# TAB 2: INTERACTIVE DEPENDENCY GRAPH
 # ==========================================
 if tab_graph and st.session_state.repo_data:
     with tab_graph:
         col_g1, col_g2 = st.columns([3, 1])
         with col_g1:
             st.markdown("### 🕸️ **Interactive Dependency Network Graph**")
-            st.caption("Drag nodes, hover over files/functions, and zoom in/out to explore dependencies.")
+            st.caption("Drag nodes, hover over files/functions to inspect metadata, and zoom to explore graph topology.")
         with col_g2:
             graph_mode = st.radio(
-                "Graph View:",
+                "Graph Granularity:",
                 ["File-Level Imports", "Function Call Graph"],
                 horizontal=True
             )
@@ -538,90 +597,111 @@ if tab_graph and st.session_state.repo_data:
 
 
 # ==========================================
-# TAB 3: CODE & FUNCTION EXPLORER (WIDE)
+# TAB 3: CODEBASE & FUNCTION EXPLORER
 # ==========================================
 if tab_inspect and st.session_state.repo_data:
     with tab_inspect:
         st.markdown("### 📂 **Codebase & Function Explorer**")
-        st.caption("Select any real file in the codebase to inspect all its user-defined functions, line numbers, and callers.")
+        st.caption("Inspect parsed user-defined functions, callers, callees, and source code.")
 
         catalog = st.session_state.repo_data.get("catalog", {})
-        files_list = catalog.get("files", [])
-        file_options = {f["path"]: f for f in files_list}
+        files = catalog.get("files", [])
 
-        col_sel1, col_sel2 = st.columns([3, 1])
-        with col_sel1:
-            selected_file_path = st.selectbox(
-                "Select a file to inspect:",
-                options=list(file_options.keys()),
-                help="Select any real parsed file from this repository"
-            )
+        if not files:
+            st.info("No code files found in this repository.")
+        else:
+            col_list, col_detail = st.columns([1, 2])
 
-        if selected_file_path:
-            f_info = file_options[selected_file_path]
-            col_f1, col_f2 = st.columns([3, 1])
+            with col_list:
+                file_options = {f["path"]: f for f in files}
+                selected_file_path = st.selectbox(
+                    "Select Code File:",
+                    options=list(file_options.keys()),
+                    format_func=lambda p: f"📄 {p} ({len(file_options[p]['functions'])} funcs)"
+                )
+                selected_file = file_options[selected_file_path]
 
-            with col_f1:
-                st.markdown(f"#### 📄 `{f_info['basename']}`")
-                st.markdown(f"**Path:** `{f_info['path']}` | **Directory:** `{f_info['directory']}`")
+                st.markdown(f"**Directory:** `{selected_file.get('directory', 'Root')}`")
+                st.markdown(f"**Lines of Code:** `{selected_file.get('lines', 0)}`")
+                st.markdown(f"**Imports Count:** `{len(selected_file.get('imports', []))}`")
 
-                funcs = f_info.get("functions", [])
+                funcs = selected_file.get("functions", [])
+                st.markdown(f"#### User-Defined Functions ({len(funcs)})")
                 if funcs:
-                    st.markdown(f"**⚙️ User-Defined Functions ({len(funcs)}):**")
                     for fn in funcs:
-                        st.markdown(f"- 🔹 **`def {fn}(...)`**")
+                        st.markdown(f"- ⚙️ **`{fn}`**")
                 else:
-                    st.info("This file does not define standalone functions (it may contain configuration, models, or entrypoint code).")
+                    st.caption("No standalone user-defined functions in this file.")
 
-                imports = f_info.get("imports", [])
-                if imports:
-                    with st.expander(f"📦 Imports ({len(imports)})", expanded=False):
-                        for imp in imports:
-                            st.code(imp, language="python")
-
-            with col_f2:
-                st.markdown("#### ⚡ Quick Actions")
-                if st.button(f"🔍 Explain {f_info['basename']}", use_container_width=True):
-                    st.session_state.quick_prompt = f"Explain the file {f_info['path']} and its functions"
-                    st.rerun()
-
-                if st.button(f"💥 Impact of {f_info['basename']}", use_container_width=True):
-                    st.session_state.quick_prompt = f"What breaks if I change {f_info['basename']}?"
-                    st.rerun()
+            with col_detail:
+                st.markdown(f"#### 📄 Source Preview: `{selected_file_path}`")
+                raw_path = selected_file["full_path"]
+                if os.path.exists(raw_path):
+                    try:
+                        with open(raw_path, "r", encoding="utf-8", errors="ignore") as f:
+                            code_content = f.read()
+                        ext = selected_file_path.split(".")[-1]
+                        lang = "python" if ext == "py" else ("java" if ext == "java" else "sql")
+                        st.code(code_content, language=lang, line_numbers=True)
+                    except Exception as e:
+                        st.error(f"Could not read file: {e}")
+                else:
+                    st.warning("File content preview not available.")
 
 
 # ==========================================
-# TAB 4: BLAST-RADIUS SIMULATOR (WIDE)
+# TAB 4: CHANGE BLAST-RADIUS SIMULATOR
 # ==========================================
 if tab_impact and st.session_state.repo_data:
     with tab_impact:
         st.markdown("### 💥 **Change Blast-Radius Simulator**")
-        st.caption("Select any function or file to simulate the exact downstream ripple effects and risk.")
+        st.caption("Simulate reverse dependency propagation to identify exactly what would break before modifying a function or file.")
 
         catalog = st.session_state.repo_data.get("catalog", {})
-        all_functions = [fn["id"] for fn in catalog.get("functions", [])]
-        all_files = [f["path"] for f in catalog.get("files", [])]
-        target_options = sorted(all_functions + all_files)
+        files = catalog.get("files", [])
+        functions = catalog.get("functions", [])
 
-        col_s1, col_s2 = st.columns([3, 1])
-        with col_s1:
+        col_sim1, col_sim2 = st.columns([3, 1])
+
+        with col_sim1:
+            # Aggregate selectable items (functions and files)
+            options = []
+            for fn in functions:
+                options.append(f"⚙️ Function: {fn['name']} ({fn['file']})")
+            for f in files:
+                options.append(f"📄 File: {f['path']}")
+
             selected_target = st.selectbox(
-                "Select target function or file to modify:",
-                options=target_options,
-                help="Choose a component to compute reverse BFS dependents"
+                "Select Function or File to Modify:",
+                options=options
             )
-        with col_s2:
-            st.markdown("<div style='height:28px;'></div>", unsafe_allow_html=True)
-            run_sim = st.button("🚀 Run Blast Simulation", type="primary", use_container_width=True)
 
-        if run_sim and selected_target:
-            with st.spinner(f"Tracing blast radius for `{selected_target}`..."):
+        with col_sim2:
+            depth = st.slider("Traversal Depth (Hops):", min_value=1, max_value=5, value=3)
+
+        if st.button("🚀 Calculate Blast Radius", type="primary", use_container_width=True):
+            with st.spinner("Traversing dependency graph via Reverse-BFS..."):
+                # Determine query target
+                if selected_target.startswith("⚙️ Function:"):
+                    raw_fn_name = selected_target.split("⚙️ Function:")[1].split("(")[0].strip()
+                    query_msg = f"What breaks if I change function {raw_fn_name}?"
+                else:
+                    raw_file_name = selected_target.split("📄 File:")[1].strip()
+                    query_msg = f"What breaks if I modify file {raw_file_name}?"
+
+                payload = {
+                    "repo_name": st.session_state.repo_name,
+                    "message": query_msg
+                }
                 try:
-                    payload = {
-                        "repo_name": st.session_state.repo_name,
-                        "message": f"What breaks if I modify {selected_target}?"
-                    }
-                    resp = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=60).json()
-                    st.markdown(resp.get("answer", "No response."))
+                    res = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=90)
+                    if res.status_code == 200:
+                        impact_res = res.json()
+                        st.markdown(impact_res.get("answer", "No impact analysis returned."))
+                        if impact_res.get("diagram"):
+                            with st.expander("📊 View Blast-Radius Impact Flowchart", expanded=True):
+                                st.markdown(f"```mermaid\n{impact_res['diagram']}\n```")
+                    else:
+                        st.error(f"Backend error: {res.text}")
                 except Exception as e:
-                    st.error(f"Failed to run simulation: {e}")
+                    st.error(f"Failed to query impact simulation: {e}")

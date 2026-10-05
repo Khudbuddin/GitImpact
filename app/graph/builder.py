@@ -158,3 +158,31 @@ def generate_mermaid_diagram(graph: nx.DiGraph, max_nodes: int = 15) -> str:
         mermaid_lines.append(f'    {u_id}["{u_label}"] --> {v_id}["{v_label}"]')
 
     return "\n".join(mermaid_lines)
+
+
+def generate_function_call_mermaid(graph: nx.DiGraph, max_edges: int = 35) -> str:
+    """Generates a Mermaid flowchart TD diagram of function-to-function calls."""
+    call_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("relation") == "calls"]
+    if not call_edges:
+        return ""
+
+    mermaid_lines = ["flowchart TD"]
+    node_id_map = {}
+    counter = 1
+
+    def get_id(func_id):
+        nonlocal counter
+        if func_id not in node_id_map:
+            node_id_map[func_id] = f"F{counter}"
+            counter += 1
+        return node_id_map[func_id]
+
+    edges_to_show = call_edges[:max_edges]
+    for u, v in edges_to_show:
+        u_id = get_id(u)
+        v_id = get_id(v)
+        u_label = os.path.basename(u.split("::")[0]) + "::" + u.split("::")[-1]
+        v_label = os.path.basename(v.split("::")[0]) + "::" + v.split("::")[-1]
+        mermaid_lines.append(f'    {u_id}["{u_label}"] --> {v_id}["{v_label}"]')
+
+    return "\n".join(mermaid_lines)

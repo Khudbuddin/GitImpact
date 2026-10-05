@@ -191,36 +191,38 @@ Instruction on length: {length_rule}
     return run_completion(prompt, max_tokens=1200, temperature=0.2)
 
 
-def explain_function_connections_and_pipeline(call_edges: list, files_catalog: list, length_mode: str = "normal") -> str:
-    """Explains the exact function-to-function and file-to-file call pipeline."""
+def explain_function_connections_and_pipeline(call_edges: list, files_catalog: list, length_mode: str = "normal", include_tree: bool = False) -> str:
+    """Explains the exact function-to-function and file-to-file call pipeline and tree."""
     length_rule = get_length_instruction(length_mode)
 
     edges_formatted = []
-    for u, v in call_edges[:35]:
+    for u, v in call_edges[:45]:
         u_clean = os.path.basename(u.split("::")[0]) + "::" + u.split("::")[-1]
         v_clean = os.path.basename(v.split("::")[0]) + "::" + v.split("::")[-1]
         edges_formatted.append(f"- `{u_clean}` ──(calls)──> `{v_clean}`")
 
     edges_block = "\n".join(edges_formatted) if edges_formatted else "Direct function calls mapped via modules."
+    tree_instruction = "3. **Visual Function Tree Chart**: Draw a clear structured text tree diagram (using `└──` or markdown hierarchy) showing the root entry function and its child function branches." if include_tree else ""
 
-    prompt = f"""The user wants to know how files and user-defined functions connect to each other, how execution flows, and how a function's output affects another file.
+    prompt = f"""The user wants to know how files and user-defined functions connect to each other in this repository.
 
-Here is the EXACT Function Call Graph extracted via AST analysis:
+Here is the EXACT Function-to-Function Call Graph extracted via AST analysis:
 {edges_block}
 
 Files in the repository:
 {[f['path'] for f in files_catalog]}
 
 Task:
-Provide a clear, concrete breakdown:
-1. **End-to-End Execution Flow**: How does data start from the entry point (e.g. UI / main) and flow through functions down to the backend loaders, models, and databases?
-2. **Function-to-Function Connections**: Detail the specific call chains (e.g. Function A calls Function B to parse data, which returns output to Function C).
-3. **Data Dependency**: Explain how changes in one function's return format would ripple into the next function that receives its output.
+Provide an accurate, grounded breakdown:
+1. **Function Call Pipeline & Data Flow**: Detail the specific call chains (e.g., function X calls function Y to process input, which then invokes function Z).
+2. **Data Dependency & Ripple Effects**: Explain how modifying one function's return signature impacts downstream callers.
+{tree_instruction}
 
-CRITICAL: ONLY mention the real functions and files in the call graph above. Do NOT invent functions!
+CRITICAL: You HAVE the exact call graph above. You MUST use these exact real function names. Do NOT say you don't have the functions.
 Instruction on length: {length_rule}
+Format with clean GitHub Markdown.
 """
-    return run_completion(prompt, max_tokens=1300, temperature=0.2)
+    return run_completion(prompt, max_tokens=1400, temperature=0.2)
 
 
 def explain_repository_overview(repo_data: dict, files_catalog: list, length_mode: str = "normal") -> str:

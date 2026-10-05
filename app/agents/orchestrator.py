@@ -13,7 +13,7 @@ from app.agents.explainer_agent import (
 )
 from app.agents.impact_agent import explain_impact
 from app.graph.traversal import find_impact
-from app.graph.builder import get_graph_summary, generate_mermaid_diagram
+from app.graph.builder import get_graph_summary, generate_mermaid_diagram, generate_function_call_mermaid
 from app.parsing.repo_scanner import build_ground_truth_catalog
 
 
@@ -151,17 +151,27 @@ def route_and_execute_query(user_question: str, repo_data: dict | None, graph=No
             )
             return {"answer": answer, "intent": "ALL_FUNCTIONS_SUMMARY", "diagram": None}
 
-    # 5. Function Connections & Execution Pipeline (e.g. "how are files connected", "how a function is connected to another file output")
+    # 5. Function Call Tree / Flow Chart Query (e.g. "tree chart", "how functions connected", "chart of functions")
+    if any(k in q_low for k in ["tree chart", "function chart", "chart of all", "chart of functions", "function tree", "tree of functions", "call graph", "call chart", "diagram of functions", "how functions connected", "how are functions connected", "chart or anything that shows"]):
+        mermaid_diag = generate_function_call_mermaid(graph) or generate_mermaid_diagram(graph)
+        answer = explain_function_connections_and_pipeline(call_edges, files_catalog, length_mode=length_mode, include_tree=True)
+        return {
+            "answer": answer,
+            "intent": "FUNCTION_TREE_CHART",
+            "diagram": mermaid_diag
+        }
+
+    # 6. Function Connections & Execution Pipeline
     if any(k in q_low for k in ["how are files connected", "how files connected", "function connected", "another file output", "data flow", "how does the thing go", "pipeline", "architecture flow", "how there files"]):
         answer = explain_function_connections_and_pipeline(call_edges, files_catalog, length_mode=length_mode)
-        mermaid_diag = generate_mermaid_diagram(graph)
+        mermaid_diag = generate_function_call_mermaid(graph) or generate_mermaid_diagram(graph)
         return {
             "answer": answer,
             "intent": "FUNCTION_PIPELINE",
             "diagram": mermaid_diag
         }
 
-    # 6. Change Blast-Radius Impact Analysis
+    # 7. Change Blast-Radius Impact Analysis
     if any(k in q_low for k in ["break", "impact", "affect", "depend", "risk", "consequence", "ripple", "blast radius"]):
         if matched_func and matched_file:
             node_id = f"{matched_file['full_path']}::{matched_func}"
@@ -181,7 +191,7 @@ def route_and_execute_query(user_question: str, repo_data: dict | None, graph=No
         answer = explain_impact(node_id, impact_data, length_mode=length_mode)
         return {"answer": answer, "intent": "IMPACT_ANALYSIS", "diagram": None}
 
-    # 7. Whole Repo Overview / Directory Overview
+    # 8. Whole Repo Overview / Directory Overview
     if any(k in q_low for k in ["whole repo", "entire repo", "project overview", "what does this project do", "what is this repo", "explain repo", "summary of repo", "explain the project", "full description"]):
         answer = explain_repository_overview(repo_data, files_catalog, length_mode=length_mode)
         return {"answer": answer, "intent": "REPO_OVERVIEW", "diagram": None}
@@ -190,7 +200,7 @@ def route_and_execute_query(user_question: str, repo_data: dict | None, graph=No
         answer = explain_directories(directory_map, length_mode=length_mode)
         return {"answer": answer, "intent": "DIRECTORY_MAP", "diagram": None}
 
-    # 8. Single File or Function Drill-down
+    # 9. Single File or Function Drill-down
     if matched_func and matched_file:
         from app.parsing.python_parser import get_function_source
         from app.parsing.java_parser import get_java_method_source
@@ -210,15 +220,21 @@ def route_and_execute_query(user_question: str, repo_data: dict | None, graph=No
         answer = explain_file(matched_file["path"], sources, length_mode=length_mode)
         return {"answer": answer, "intent": "EXPLAIN_FILE", "diagram": None}
 
-    # 9. Free-form Grounded Codebase Q&A
+    # 10. Free-form Grounded Codebase Q&A
     length_rule = get_length_instruction(length_mode)
+    functions_summary = "\n".join(f"- `{f['path']}`: {', '.join(f['functions'])}" for f in files_catalog if f["functions"])
+    call_sample = "\n".join(f"- `{os.path.basename(u.split('::')[0])}::{u.split('::')[-1]}` -> `{os.path.basename(v.split('::')[0])}::{v.split('::')[-1]}`" for u, v in call_edges[:25])
+
     prompt = f"""The user is asking a question about repository `{repo_data.get('repo_name')}`:
 
 User Question: "{user_question}"
 
 Ground Truth Context:
 - Real Code Files: {[f['path'] for f in files_catalog]}
-- Real Functions: {catalog['total_functions']} user-defined functions
+- Real User-Defined Functions by File:
+{functions_summary}
+- Real Function-to-Function Call Relationships:
+{call_sample}
 - Real Directories: {list(directory_map.keys())}
 - README Snippet:
 {repo_data.get('readme_content', '')[:1000]}
@@ -226,7 +242,9 @@ Ground Truth Context:
 Task:
 Answer accurately based ONLY on the real codebase facts above.
 Instruction on length: {length_rule}
+CRITICAL: You HAVE the exact functions and files above. NEVER say you don't have the list of functions.
+Format with clean GitHub Markdown.
 """
-    tokens = 450 if length_mode == "concise" else 950
+    tokens = 600 if length_mode == "concise" else 1300
     answer = run_completion(prompt, max_tokens=tokens, temperature=0.2)
     return {"answer": answer, "intent": "GENERAL_REPO_QUERY", "diagram": None}
