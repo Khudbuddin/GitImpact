@@ -1,5 +1,6 @@
 import os
 import re
+import difflib
 from app.agents.explainer_agent import (
     explain_general_chat,
     explain_repository_overview,
@@ -38,31 +39,52 @@ def match_directory(question: str, directory_map: dict) -> str | None:
 
 
 def match_file_or_function(question: str, files_catalog: list) -> tuple[dict | None, str | None]:
-    """Finds if a specific file or function is mentioned in the question."""
+    """Finds if a specific file or function is mentioned in the question, with robust typo and whitespace tolerance."""
     q_low = question.lower()
-    matched_file = None
-    matched_func = None
+    q_norm = re.sub(r'[_\\-]', ' ', q_low)
 
+    # 1. Exact or normalized file matching
     for f_info in files_catalog:
         f_base = f_info["basename"].lower()
         f_path = f_info["path"].lower()
-        if f_base in q_low or f_path in q_low:
+        f_base_no_ext = os.path.splitext(f_base)[0]
+        if f_base in q_low or f_path in q_low or (len(f_base_no_ext) > 3 and f_base_no_ext in q_low):
             matched_file = f_info
             for fn in f_info["functions"]:
-                if fn.lower() in q_low:
-                    matched_func = fn
-                    break
-            break
-
-    # If no file was matched directly, check if a unique function name was mentioned
-    if not matched_file:
-        for f_info in files_catalog:
-            for fn in f_info["functions"]:
-                pattern = r'\b' + re.escape(fn.lower()) + r'\b'
-                if re.search(pattern, q_low):
+                fn_clean = fn.lower()
+                fn_spaced = fn_clean.replace('_', ' ')
+                if fn_clean in q_low or fn_spaced in q_norm:
                     return f_info, fn
+            return f_info, None
 
-    return matched_file, matched_func
+    # 2. Exact or normalized function matching across all files
+    for f_info in files_catalog:
+        for fn in f_info["functions"]:
+            fn_clean = fn.lower()
+            fn_spaced = fn_clean.replace('_', ' ')
+            if fn_clean in q_low or fn_spaced in q_norm or (r'\b' + re.escape(fn_clean) + r'\b' in q_low):
+                return f_info, fn
+
+    # 3. Fuzzy matching for typos (e.g. "gerenrate chat" -> "generate_chat", "gererate_function" -> "generate_chat")
+    all_funcs = []
+    func_to_file = {}
+    for f_info in files_catalog:
+        for fn in f_info["functions"]:
+            all_funcs.append(fn)
+            func_to_file[fn] = f_info
+
+    if all_funcs:
+        # Check words and 2-word combinations
+        words = re.findall(r'[a-z]{3,}', q_norm)
+        cleaned_words = [w for w in words if w not in ["what", "does", "function", "work", "working", "repo", "tell", "explain", "about", "show"]]
+        candidates = cleaned_words + ['_'.join(cleaned_words[i:i+2]) for i in range(len(cleaned_words)-1)]
+        for cand in candidates:
+            close = difflib.get_close_matches(cand, all_funcs, n=1, cutoff=0.7)
+            if close:
+                matched_fn = close[0]
+                return func_to_file[matched_fn], matched_fn
+
+    return None, None
 
 
 def route_and_execute_query(user_question: str, repo_data: dict | None, graph=None) -> dict:

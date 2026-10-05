@@ -15,27 +15,27 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- MODERN ENTERPRISE SAAS STYLING ---
+# --- MODERN ENTERPRISE SAAS STYLING (MATCHING REFERENCE DESIGNS) ---
 st.markdown("""
 <style>
     /* Global Base */
     .stApp {
-        background-color: #070a13;
+        background-color: #080c16;
         color: #f8fafc;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
     }
 
     /* Total Removal of Streamlit Sidebar */
-    [data-testid="stSidebar"], [data-testid="collapsedControl"] {
+    [data-testid="stSidebar"], [data-testid="collapsedControl"], section[data-testid="stSidebar"] {
         display: none !important;
     }
 
     /* Screen-wide container with generous padding */
     .block-container {
         padding-top: 1.5rem !important;
-        padding-bottom: 3rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 2.2rem !important;
+        padding-right: 2.2rem !important;
         max-width: 100% !important;
     }
 
@@ -44,8 +44,8 @@ st.markdown("""
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: linear-gradient(90deg, #0d1322 0%, #151d32 50%, #0d1322 100%);
-        border: 1px solid rgba(99, 102, 241, 0.22);
+        background: linear-gradient(90deg, #0d1424 0%, #151f38 50%, #0d1424 100%);
+        border: 1px solid rgba(99, 102, 241, 0.25);
         border-radius: 14px;
         padding: 14px 28px;
         margin-bottom: 22px;
@@ -96,8 +96,8 @@ st.markdown("""
 
     /* Active Project Metadata Bar */
     .repo-active-bar {
-        background: #0d1322;
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: #0d1424;
+        border: 1px solid rgba(99, 102, 241, 0.2);
         border-radius: 14px;
         padding: 16px 24px;
         margin-bottom: 22px;
@@ -108,15 +108,15 @@ st.markdown("""
         gap: 16px;
     }
     .repo-active-title {
-        font-size: 1.25rem;
-        font-weight: 700;
+        font-size: 1.3rem;
+        font-weight: 800;
         color: #f8fafc;
         display: flex;
         align-items: center;
         gap: 10px;
     }
     .metric-badge {
-        background: #151d32;
+        background: #151f38;
         color: #94a3b8;
         border: 1px solid #233152;
         border-radius: 8px;
@@ -131,20 +131,20 @@ st.markdown("""
         color: #38bdf8;
     }
     .tech-pill {
-        background: rgba(99, 102, 241, 0.16);
+        background: rgba(99, 102, 241, 0.18);
         color: #c7d2fe;
-        border: 1px solid rgba(99, 102, 241, 0.35);
+        border: 1px solid rgba(99, 102, 241, 0.4);
         border-radius: 12px;
         padding: 3px 10px;
         font-size: 0.75rem;
         font-weight: 600;
     }
 
-    /* WIDE EXECUTIVE TABS COMPONENT */
+    /* WIDE EXECUTIVE TABS COMPONENT (100% SCREEN WIDTH) */
     .stTabs [data-baseweb="tab-list"] {
         width: 100% !important;
         display: flex !important;
-        background-color: #0b0f19 !important;
+        background-color: #0b101d !important;
         padding: 6px !important;
         border-radius: 14px !important;
         border: 1px solid rgba(255, 255, 255, 0.08) !important;
@@ -178,72 +178,125 @@ st.markdown("""
         box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3) !important;
     }
 
-    /* Hero Search Screen */
+    /* Modern Hero Container (Matching Reference Designs) */
     .hero-container {
-        background: radial-gradient(circle at 10% 20%, #1e1b4b 0%, #0d1322 65%, #070a13 100%);
-        border: 1px solid rgba(99, 102, 241, 0.25);
-        border-radius: 16px;
-        padding: 46px 40px;
+        background: radial-gradient(circle at 10% 20%, #1e1b4b 0%, #0d1424 60%, #080c16 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 18px;
+        padding: 50px 45px;
         margin-bottom: 28px;
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
         text-align: center;
     }
+    .hero-eyebrow {
+        font-size: 0.82rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: #818cf8;
+        margin-bottom: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(99, 102, 241, 0.14);
+        padding: 4px 14px;
+        border-radius: 20px;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+    }
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 2.8rem;
         font-weight: 800;
         letter-spacing: -0.03em;
         background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 14px;
+        line-height: 1.15;
     }
     .hero-subtitle {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         color: #94a3b8;
-        max-width: 800px;
-        margin: 0 auto 28px auto;
+        max-width: 820px;
+        margin: 0 auto 32px auto;
         line-height: 1.6;
     }
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
+
+    /* Feature Pills Row (Like Reference 2) */
+    .feature-pills-row {
+        display: flex;
+        justify-content: center;
         gap: 16px;
-        margin-top: 32px;
-        text-align: left;
+        flex-wrap: wrap;
+        margin-top: 24px;
     }
-    .feature-card {
-        background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.07);
-        border-radius: 12px;
-        padding: 20px;
-    }
-    .feature-card h4 {
-        color: #38bdf8;
-        font-size: 1rem;
-        margin-top: 0;
-        margin-bottom: 8px;
+    .feature-pill-card {
+        background: #0f182c;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-size: 0.85rem;
+        color: #94a3b8;
         display: flex;
         align-items: center;
         gap: 8px;
     }
-    .feature-card p {
-        color: #94a3b8;
+    .feature-pill-card strong {
+        color: #f1f5f9;
+    }
+
+    /* Stepper Progress Bar (Like Reference 1) */
+    .stepper-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 860px;
+        margin: 36px auto 0 auto;
+        padding: 16px 24px;
+        background: rgba(15, 24, 44, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 14px;
+    }
+    .step-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-align: left;
+    }
+    .step-num {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #1e1b4b;
+        color: #c7d2fe;
+        border: 1px solid rgba(99, 102, 241, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 0.85rem;
-        line-height: 1.5;
-        margin: 0;
+        font-weight: 700;
+    }
+    .step-text-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #f1f5f9;
+    }
+    .step-text-sub {
+        font-size: 0.75rem;
+        color: #64748b;
     }
 
     /* Message Bubbles */
     .stChatMessage {
         border-radius: 12px !important;
-        margin-bottom: 14px !important;
+        margin-bottom: 16px !important;
         border: 1px solid rgba(255, 255, 255, 0.06) !important;
-        background-color: #0d1322 !important;
+        background-color: #0d1424 !important;
+        padding: 18px !important;
     }
 
-    /* Buttons */
+    /* Primary and Secondary Buttons */
     .stButton>button {
-        border-radius: 9px !important;
+        border-radius: 10px !important;
         font-weight: 600 !important;
         transition: all 0.2s ease !important;
     }
@@ -258,9 +311,9 @@ if "messages" not in st.session_state:
             "role": "assistant",
             "content": (
                 "👋 **Welcome to GitImpact Codebase Intelligence Studio!**\n\n"
-                "I am your AI codebase intelligence assistant. You can chat freely with me, or paste any "
-                "public **GitHub repository link** above to automatically build real AST dependency graphs, "
-                "trace function-level execution pipelines, and simulate change blast radius."
+                "I am your AI codebase intelligence assistant. You can chat freely with me, or analyze any "
+                "public **GitHub repository** to automatically build real AST dependency graphs, "
+                "trace function-level execution pipelines, and simulate change blast radius with zero hallucinations."
             )
         }
     ]
@@ -308,7 +361,7 @@ def trigger_clone_analysis(url: str):
 
 def render_interactive_graph(edges: list, nodes: list, graph_type="files"):
     """Renders a wide, interactive physics graph with PyVis."""
-    net = Network(height="670px", width="100%", bgcolor="#070a13", font_color="#f8fafc", directed=True)
+    net = Network(height="680px", width="100%", bgcolor="#080c16", font_color="#f8fafc", directed=True)
     net.force_atlas_2based(gravity=-60, central_gravity=0.015, spring_length=140, damping=0.9)
 
     added_nodes = set()
@@ -331,7 +384,7 @@ def render_interactive_graph(edges: list, nodes: list, graph_type="files"):
 
     try:
         html = net.generate_html()
-        components.html(html, height=690, scrolling=True)
+        components.html(html, height=700, scrolling=True)
     except Exception as e:
         st.warning(f"Could not render interactive graph: {e}")
 
@@ -341,7 +394,7 @@ backend_online = check_backend_health()
 status_html = (
     '<div class="status-badge-online">🟢 Engine Online (Port 8000)</div>'
     if backend_online else
-    '<div class="status-badge-offline">🔴 Backend Offline — Ensure uvicorn is running</div>'
+    '<div class="status-badge-offline">🔴 Backend Offline — Run uvicorn app.main:app</div>'
 )
 
 st.markdown(f"""
@@ -354,8 +407,125 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 
-# --- REPOSITORY HEADER OR CLEAN HERO SEARCH ---
-if st.session_state.repo_data:
+# =========================================================================
+# VIEW 1: HERO LANDING SCREEN (WHEN NO REPOSITORY IS LOADED)
+# Only ONE single search bar exists here. NO second chat input!
+# =========================================================================
+if not st.session_state.repo_data:
+    st.markdown("""
+    <div class="hero-container">
+        <div class="hero-eyebrow">✦ CODEBASE INTELLIGENCE & AST DEPENDENCY ENGINE ✦</div>
+        <div class="hero-title">Understand any codebase in under a minute.</div>
+        <div class="hero-subtitle">
+            Paste any public GitHub repository to extract real Abstract Syntax Trees (AST), map module dependencies,
+            trace concrete function call pipelines, and simulate change blast radius with zero hallucinations.
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Clean, Single Full-Width Input Box
+    col_in, col_btn = st.columns([5, 1])
+    with col_in:
+        repo_input = st.text_input(
+            "Repository URL Input",
+            placeholder="Paste public GitHub repository link (e.g. https://github.com/owner/repository)",
+            label_visibility="collapsed"
+        )
+    with col_btn:
+        analyze_clicked = st.button("⚡ Analyze Repository →", use_container_width=True, type="primary")
+
+    # Feature Pills (Matching Reference 2)
+    st.markdown("""
+    <div class="feature-pills-row">
+        <div class="feature-pill-card">⚡ <strong>AST Grounded</strong> — Concrete AST parsing for Python & Java</div>
+        <div class="feature-pill-card">🕸️ <strong>Topology Graph</strong> — Interactive force-directed dependency maps</div>
+        <div class="feature-pill-card">💥 <strong>Blast Radius</strong> — Reverse-BFS impact simulation before commit</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 4-Step Stepper (Matching Reference 1)
+    st.markdown("""
+    <div class="stepper-container">
+        <div class="step-item">
+            <div class="step-num">1</div>
+            <div>
+                <div class="step-text-title">Ingest & Clone</div>
+                <div class="step-text-sub">Fetches repo files safely</div>
+            </div>
+        </div>
+        <div style="color:#334155;">⟶</div>
+        <div class="step-item">
+            <div class="step-num">2</div>
+            <div>
+                <div class="step-text-title">AST Parsing</div>
+                <div class="step-text-sub">Extracts functions & calls</div>
+            </div>
+        </div>
+        <div style="color:#334155;">⟶</div>
+        <div class="step-item">
+            <div class="step-num">3</div>
+            <div>
+                <div class="step-text-title">Graph Assembly</div>
+                <div class="step-text-sub">Builds call topology</div>
+            </div>
+        </div>
+        <div style="color:#334155;">⟶</div>
+        <div class="step-item">
+            <div class="step-num">4</div>
+            <div>
+                <div class="step-text-title">Intelligence Studio</div>
+                <div class="step-text-sub">Explore & chat</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if analyze_clicked and repo_input:
+        if is_github_url(repo_input):
+            data = trigger_clone_analysis(repo_input)
+            if "error" in data:
+                st.error(f"❌ Analysis Failed: {data['error']}")
+            else:
+                st.session_state.repo_data = data
+                st.session_state.repo_name = data["repo_name"]
+
+                techs = ", ".join(data.get("tech_stack", [])) or "Python"
+                entry_pts = ", ".join(data.get("entry_points", [])) or "main.py"
+                total_files = data.get("total_files_parsed", 0)
+                total_funcs = data.get("graph_summary", {}).get("total_functions", 0)
+
+                reply = (
+                    f"✅ **Analyzed `{data['repo_name']}` successfully!**\n\n"
+                    f"- 📁 **Files Parsed:** `{total_files}` code files | `{total_funcs}` user-defined functions\n"
+                    f"- 🛠️ **Tech Stack:** {techs}\n"
+                    f"- 🚀 **Key Entry Points:** `{entry_pts}`\n\n"
+                    f"**What would you like to explore?** Use the quick action buttons above or ask:\n"
+                    f"1. *'Explain the whole repo and its purpose'* 📌\n"
+                    f"2. *'Which directory does what?'* 📁\n"
+                    f"3. *'How are files and functions connected?'* 🔗\n"
+                    f"4. *'Explain all files one by one'* 📑\n"
+                    f"5. *'What breaks if I change [function or file]?'* 💥"
+                )
+                diag = data.get("mermaid_diagram")
+                st.session_state.messages.append({
+                    "role": "user",
+                    "content": f"Analyze repository {extract_github_url(repo_input)}"
+                })
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": reply,
+                    "diagram": diag
+                })
+                st.rerun()
+        else:
+            st.warning("Please enter a valid public GitHub URL (e.g. `https://github.com/owner/repo`).")
+
+
+# =========================================================================
+# VIEW 2: WORKSPACE STUDIO (WHEN REPOSITORY IS LOADED)
+# Contains the active metadata bar, 4 wide tabs, and the anchored chat input.
+# =========================================================================
+else:
     data = st.session_state.repo_data
     col_bar_info, col_bar_btn = st.columns([5, 1])
 
@@ -389,73 +559,18 @@ if st.session_state.repo_data:
             })
             st.rerun()
 
-else:
-    # Clean, Universal Hero State — No Hardcoded Repos
-    st.markdown("""
-    <div class="hero-container">
-        <div class="hero-title">Deep Codebase Intelligence in Seconds</div>
-        <div class="hero-subtitle">
-            Paste any public GitHub repository to parse real Abstract Syntax Trees (AST), map module dependencies,
-            trace concrete function call pipelines, and simulate change blast radius with zero hallucinations.
-        </div>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h4>🌳 AST-Grounded Mapping</h4>
-                <p>Extracts concrete AST nodes for Python and Java, mapping real imports and user-defined functions.</p>
-            </div>
-            <div class="feature-card">
-                <h4>🕸️ Interactive Topology</h4>
-                <p>Explore physics-based force-directed dependency graphs at both file and function granularity.</p>
-            </div>
-            <div class="feature-card">
-                <h4>💥 Blast Radius Simulator</h4>
-                <p>Run reverse-BFS graph traversal to identify every file and function that breaks before you modify code.</p>
-            </div>
-            <div class="feature-card">
-                <h4>💬 Grounded AI Explainer</h4>
-                <p>Ask freeform questions with 100% factual answers grounded strictly in the parsed codebase catalog.</p>
-            </div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    col_in, col_btn = st.columns([5, 1])
-    with col_in:
-        repo_input = st.text_input(
-            "Repository URL",
-            placeholder="Paste public GitHub repository link (e.g. https://github.com/owner/repository)",
-            label_visibility="collapsed"
-        )
-    with col_btn:
-        analyze_clicked = st.button("🚀 Analyze Repository", use_container_width=True, type="primary")
-
-    if analyze_clicked and repo_input:
-        st.session_state.quick_prompt = repo_input
-        st.rerun()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-
-# --- 4 FULL-WIDTH WIDE TABS ---
-if st.session_state.repo_data:
+    # The 4 Wide Tabs
     tab_chat, tab_graph, tab_inspect, tab_impact = st.tabs([
         "💬 AI Intelligence Chat",
         "🕸️ Interactive Dependency Graph",
         "📂 Codebase & Function Explorer",
         "💥 Change Blast-Radius Simulator"
     ])
-else:
-    tab_chat = st.container()
-    tab_graph = None
-    tab_inspect = None
-    tab_impact = None
 
-
-# ==========================================
-# TAB 1: AI INTELLIGENCE CHAT (WIDE)
-# ==========================================
-with tab_chat:
-    if st.session_state.repo_data:
+    # -------------------------------------------------------------
+    # TAB 1: AI INTELLIGENCE CHAT (WIDE, WITH ANCHORED CHAT INPUT)
+    # -------------------------------------------------------------
+    with tab_chat:
         st.markdown("<p style='color:#94a3b8; font-size:0.85rem; margin-bottom:8px;'>⚡ <strong>Quick Intelligence Prompts:</strong></p>", unsafe_allow_html=True)
         col_p1, col_p2, col_p3, col_p4 = st.columns(4)
         with col_p1:
@@ -477,71 +592,46 @@ with tab_chat:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-    # Render Conversation Messages
-    for msg in st.session_state.messages:
-        avatar = "⚡" if msg["role"] == "assistant" else "👤"
-        with st.chat_message(msg["role"], avatar=avatar):
-            st.markdown(msg["content"])
-            if msg.get("diagram"):
-                with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=True):
-                    st.markdown(f"```mermaid\n{msg['diagram']}\n```")
-
-    user_input = st.chat_input("Ask anything about this codebase (or paste a GitHub repository URL)...")
-
-    if st.session_state.quick_prompt:
-        prompt_to_process = st.session_state.quick_prompt
-        st.session_state.quick_prompt = None
-    elif user_input:
-        prompt_to_process = user_input
-    else:
-        prompt_to_process = None
-
-    if prompt_to_process:
-        st.session_state.messages.append({"role": "user", "content": prompt_to_process})
-        with st.chat_message("user", avatar="👤"):
-            st.markdown(prompt_to_process)
-
-        with st.chat_message("assistant", avatar="⚡"):
-            if is_github_url(prompt_to_process):
-                with st.status("Analyzing Repository...", expanded=True) as status:
-                    st.write("📥 Cloning repository files from GitHub...")
-                    data = trigger_clone_analysis(prompt_to_process)
-                    if "error" in data:
-                        status.update(label="Analysis failed", state="error")
-                        reply = f"❌ **Analysis Failed:** {data['error']}"
-                        diag = None
-                    else:
-                        st.write("🌳 Parsing AST, extracting function calls & indexing directories...")
-                        st.session_state.repo_data = data
-                        st.session_state.repo_name = data["repo_name"]
-
-                        techs = ", ".join(data.get("tech_stack", [])) or "Python"
-                        entry_pts = ", ".join(data.get("entry_points", [])) or "main.py"
-                        total_files = data.get("total_files_parsed", 0)
-                        total_funcs = data.get("graph_summary", {}).get("total_functions", 0)
-
-                        status.update(label="Repository Analyzed Successfully!", state="complete")
-                        reply = (
-                            f"✅ **Analyzed `{data['repo_name']}` successfully!**\n\n"
-                            f"- 📁 **Files Parsed:** `{total_files}` code files | `{total_funcs}` user-defined functions\n"
-                            f"- 🛠️ **Tech Stack:** {techs}\n"
-                            f"- 🚀 **Key Entry Points:** `{entry_pts}`\n\n"
-                            f"**What would you like to explore next?** Use the quick action buttons above or ask:\n"
-                            f"1. *'Explain the whole repo and its purpose'* 📌\n"
-                            f"2. *'Which directory does what?'* 📁\n"
-                            f"3. *'How are files and functions connected?'* 🔗\n"
-                            f"4. *'Explain all files one by one'* 📑\n"
-                            f"5. *'What breaks if I change [function or file]?'* 💥"
-                        )
-                        diag = data.get("mermaid_diagram")
-
-                st.markdown(reply)
-                if diag:
+        # 1. Render all prior conversation messages
+        for msg in st.session_state.messages:
+            avatar = "⚡" if msg["role"] == "assistant" else "👤"
+            with st.chat_message(msg["role"], avatar=avatar):
+                st.markdown(msg["content"])
+                if msg.get("diagram"):
                     with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=True):
-                        st.markdown(f"```mermaid\n{diag}\n```")
-                st.session_state.messages.append({"role": "assistant", "content": reply, "diagram": diag})
-                st.rerun()
+                        st.markdown(f"```mermaid\n{msg['diagram']}\n```")
 
+        # 2. Chat Input ALWAYS at the bottom of the message stream
+        user_input = st.chat_input("Ask anything about this codebase (or paste another GitHub repository URL)...")
+
+        # Determine prompt
+        prompt_to_process = None
+        if st.session_state.quick_prompt:
+            prompt_to_process = st.session_state.quick_prompt
+            st.session_state.quick_prompt = None
+        elif user_input:
+            prompt_to_process = user_input
+
+        # 3. Handle prompt submission and IMMEDIATELY trigger rerun so input stays at bottom
+        if prompt_to_process:
+            st.session_state.messages.append({"role": "user", "content": prompt_to_process})
+
+            if is_github_url(prompt_to_process):
+                with st.spinner("Analyzing new repository..."):
+                    new_data = trigger_clone_analysis(prompt_to_process)
+                    if "error" in new_data:
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": f"❌ **Analysis Failed:** {new_data['error']}"
+                        })
+                    else:
+                        st.session_state.repo_data = new_data
+                        st.session_state.repo_name = new_data["repo_name"]
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": f"✅ **Analyzed `{new_data['repo_name']}` successfully!**",
+                            "diagram": new_data.get("mermaid_diagram")
+                        })
             else:
                 with st.spinner("Reasoning over AST codebase catalog..."):
                     try:
@@ -561,18 +651,18 @@ with tab_chat:
                         reply = f"⚠️ Could not connect to backend server: {e}"
                         diag = None
 
-                st.markdown(reply)
-                if diag:
-                    with st.expander("📊 View Architecture Flowchart (Mermaid)", expanded=True):
-                        st.markdown(f"```mermaid\n{diag}\n```")
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": reply,
+                    "diagram": diag
+                })
 
-                st.session_state.messages.append({"role": "assistant", "content": reply, "diagram": diag})
+            # RERUN GUARANTEES CHAT INPUT STAYS AT THE BOTTOM BELOW NEW MESSAGES
+            st.rerun()
 
-
-# ==========================================
-# TAB 2: INTERACTIVE DEPENDENCY GRAPH
-# ==========================================
-if tab_graph and st.session_state.repo_data:
+    # -------------------------------------------------------------
+    # TAB 2: INTERACTIVE DEPENDENCY GRAPH
+    # -------------------------------------------------------------
     with tab_graph:
         col_g1, col_g2 = st.columns([3, 1])
         with col_g1:
@@ -595,11 +685,9 @@ if tab_graph and st.session_state.repo_data:
             func_nodes = [f["full_path"] + "::" + fn for f in catalog.get("files", []) for fn in f.get("functions", [])]
             render_interactive_graph(call_edges, func_nodes, graph_type="functions")
 
-
-# ==========================================
-# TAB 3: CODEBASE & FUNCTION EXPLORER
-# ==========================================
-if tab_inspect and st.session_state.repo_data:
+    # -------------------------------------------------------------
+    # TAB 3: CODEBASE & FUNCTION EXPLORER
+    # -------------------------------------------------------------
     with tab_inspect:
         st.markdown("### 📂 **Codebase & Function Explorer**")
         st.caption("Inspect parsed user-defined functions, callers, callees, and source code.")
@@ -648,11 +736,9 @@ if tab_inspect and st.session_state.repo_data:
                 else:
                     st.warning("File content preview not available.")
 
-
-# ==========================================
-# TAB 4: CHANGE BLAST-RADIUS SIMULATOR
-# ==========================================
-if tab_impact and st.session_state.repo_data:
+    # -------------------------------------------------------------
+    # TAB 4: CHANGE BLAST-RADIUS SIMULATOR
+    # -------------------------------------------------------------
     with tab_impact:
         st.markdown("### 💥 **Change Blast-Radius Simulator**")
         st.caption("Simulate reverse dependency propagation to identify exactly what would break before modifying a function or file.")
@@ -664,7 +750,6 @@ if tab_impact and st.session_state.repo_data:
         col_sim1, col_sim2 = st.columns([3, 1])
 
         with col_sim1:
-            # Aggregate selectable items (functions and files)
             options = []
             for fn in functions:
                 options.append(f"⚙️ Function: {fn['name']} ({fn['file']})")
@@ -681,7 +766,6 @@ if tab_impact and st.session_state.repo_data:
 
         if st.button("🚀 Calculate Blast Radius", type="primary", use_container_width=True):
             with st.spinner("Traversing dependency graph via Reverse-BFS..."):
-                # Determine query target
                 if selected_target.startswith("⚙️ Function:"):
                     raw_fn_name = selected_target.split("⚙️ Function:")[1].split("(")[0].strip()
                     query_msg = f"What breaks if I change function {raw_fn_name}?"
