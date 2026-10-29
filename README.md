@@ -1,194 +1,211 @@
-# ⚡ GitImpact
+# GitImpact
 
-> **AI-Powered Codebase Intelligence & Change Blast-Radius Analysis Platform**
+A codebase intelligence platform that answers one engineering question: *"If I change this function or file, what else will break?"* GitImpact clones a public GitHub repository, parses it into ASTs, models it as a dependency graph, and uses LLM agents to explain the architecture and the impact of a change in plain English.
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?style=flat&logo=FastAPI&logoColor=white)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B.svg?style=flat&logo=Streamlit&logoColor=white)](https://streamlit.io)
-[![Tree-Sitter](https://img.shields.io/badge/Tree--Sitter-AST%20Parsing-22c55e.svg?style=flat)](https://tree-sitter.github.io)
-[![NetworkX](https://img.shields.io/badge/NetworkX-Graph%20Traversal-blue.svg?style=flat)](https://networkx.org)
-[![Groq](https://img.shields.io/badge/Groq-Llama%203.3%20Inference-f97316.svg?style=flat)](https://groq.com)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)
+![Tree-sitter](https://img.shields.io/badge/Tree--sitter-AST-22C55E)
+![NetworkX](https://img.shields.io/badge/NetworkX-Graph-2563EB)
+![Groq](https://img.shields.io/badge/Groq-LLM-F97316)
 
----
+## Overview
 
-## 📌 Overview
+Text search and regex can't tell you what depends on a function. GitImpact parses real syntax trees with `tree-sitter`, builds a directed dependency graph with `NetworkX`, and computes the blast radius of a change with a reverse breadth-first search. The LLM is then used only to explain results that were computed from the code, not to guess them.
 
-**GitImpact** is an intelligent developer platform that answers the crucial engineering question:
-> *"If I modify this function or refactor this file, what other parts of the codebase will break?"*
+## Features
 
-Instead of relying on fragile text searches or regex matching, **GitImpact** ingests any public GitHub repository, constructs concrete **Abstract Syntax Tree (AST)** representations using `tree-sitter`, models the code into a multi-level **Directed Dependency Graph** via `NetworkX`, and leverages **Groq-accelerated LLM Agents** to provide deep architectural insights and change impact analysis in plain English.
+- **AST parsing:** extracts functions, classes, imports and scoped function calls from Python and Java with `tree-sitter`, and tables and columns from SQL schemas with `sqlparse`.
+- **Dependency graph:** file, function and table nodes connected by `contains`, `calls` and `imports` edges.
+- **Blast-radius analysis:** reverse BFS over `calls` and `imports` edges returns every affected component with its distance from the change.
+- **Grounded AI answers:** every prompt is built from a catalog of the repository's real files, functions and call edges, and the system prompt forbids inventing names.
+- **Intent routing:** questions are routed to the right analysis, including repository overview, directory responsibilities, file-by-file walkthroughs, function call trees, function or file drill-down, and impact analysis. Typos in file and function names are tolerated.
+- **Adjustable depth:** keywords such as "brief" or "step by step" switch answers between concise, normal and detailed modes.
+- **Interactive studio:** a Streamlit app with chat, a force-directed dependency graph, a source and function explorer, and a blast-radius simulator.
 
----
-
-## ✨ Key Features
-
-- 💬 **Natural Conversational Flow**: Start chatting casually, ask general questions, or paste a repository URL at any time.
-- 🌳 **True AST Parsing**: Extracts functions, classes, imports, and calls with scope-tracking using `tree-sitter` (Python & Java) and `sqlparse` (SQL schemas).
-- 🕸️ **Multi-Level Dependency Graph**: Tracks file containment (`contains`), function invocations (`calls`), and module imports (`imports`).
-- 💥 **Change Blast-Radius Engine**: Reverse Breadth-First Search (BFS) graph traversal calculates exact topological distances for all downstream affected components.
-- 🧠 **Multi-Intent AI Orchestrator**: Automatically routes questions to specialized agents:
-  - **Whole Repository Overview**: Explains the core purpose, tech stack, and workflow.
-  - **Directory Mapping**: Explains the exact responsibility of every directory.
-  - **File Connections & Flow**: Analyzes dependencies and renders an interactive **Mermaid flowchart**.
-  - **Specific Code Drilldown**: Explains specific functions or files.
-  - **Blast-Radius Impact Analysis**: Evaluates risk and suggests testing checklists before deploying code changes.
-- 📏 **Adaptive Response Length**: Automatically scales depth from quick 2-bullet TL;DRs to in-depth, step-by-step architectural walkthroughs.
-- 🎨 **Modern Streamlit Dashboard**: Includes an active repository summary card, tech stack badges, an interactive directory explorer, and one-click quick prompt chips.
-
----
-
-## 🏗️ Architecture & Data Flow
+## Architecture
 
 ```mermaid
 flowchart TD
-    User([Developer / User]) <--> UI[Streamlit UI\nfrontend/app_ui.py]
-    UI <--> API[FastAPI Gateway\napp/api/routes.py]
+    UI["Streamlit UI<br/>frontend/app_ui.py"] <--> API["FastAPI<br/>app/api/routes.py"]
 
-    subgraph Ingestion & AST Analysis
-        API --> Cloner[Git Ingestion\napp/ingestion/cloner.py]
-        Cloner --> Scanner[Repository Scanner\napp/parsing/repo_scanner.py]
-        Scanner --> PyParser[Python AST\ntree-sitter-python]
-        Scanner --> JavaParser[Java AST\ntree-sitter-java]
-        Scanner --> SqlParser[SQL DDL\nsqlparse]
+    subgraph Ingestion["Ingestion and parsing"]
+        API --> Cloner["Shallow git clone<br/>cloner.py"]
+        Cloner --> Scanner["Repository scanner<br/>repo_scanner.py"]
+        Scanner --> Py["Python AST"]
+        Scanner --> Java["Java AST"]
+        Scanner --> Sql["SQL schema"]
     end
 
-    subgraph Graph Engine
-        PyParser & JavaParser & SqlParser --> Builder[Dependency Graph Builder\napp/graph/builder.py]
-        Builder --> Graph[(NetworkX DiGraph)]
-        Graph --> Traversal[Reverse BFS Traversal\napp/graph/traversal.py]
+    subgraph Graph["Graph engine"]
+        Py & Java & Sql --> Builder["Graph builder<br/>builder.py"]
+        Builder --> DG[("NetworkX DiGraph")]
+        DG --> BFS["Reverse BFS<br/>traversal.py"]
     end
 
-    subgraph Multi-Agent AI System
-        API --> Router[Intent Orchestrator\napp/agents/orchestrator.py]
-        Router -->|Overview / Architecture| Explainer[Explainer Agent\napp/agents/explainer_agent.py]
-        Router -->|Impact / Risk| ImpactAgent[Impact Agent\napp/agents/impact_agent.py]
-        Traversal --> ImpactAgent
-        Explainer & ImpactAgent --> Groq[Groq Llama-3.3 LLM]
+    subgraph Agents["AI agents"]
+        API --> Router["Intent orchestrator<br/>orchestrator.py"]
+        Router --> Explainer["Explainer agent"]
+        Router --> Impact["Impact agent"]
+        BFS --> Impact
+        Explainer & Impact --> LLM["Groq LLM"]
     end
 
-    subgraph Persistence
-        Scanner --> DB[(SQLite Cache\napp/database/db.py)]
-    end
+    Scanner --> DB[("SQLite metadata<br/>db.py")]
 ```
 
----
+### Parsing and graph model
 
-## 📂 Project Structure
+`repo_scanner.py` walks the repository (skipping `.git`, virtual environments, `node_modules` and similar), parses `.py`, `.java` and `.sql` files, detects the tech stack from `requirements.txt`, `package.json` and Docker files, finds entry points, reads the README, and classifies each directory's purpose.
 
-```plaintext
+`builder.py` turns the parsed output into a graph:
+
+| Node | Edge | Meaning |
+|---|---|---|
+| File | `contains` | File to its functions or tables |
+| Function | `calls` | Function to the functions it calls (scoped to the enclosing function) |
+| File | `imports` | File to the files it imports |
+
+### Impact analysis
+
+`find_impact` walks predecessors of the target over `calls` and `imports` edges and records each dependent's distance. The result is deterministic. The impact agent then sends the nearest dependents to the LLM to produce the direct impact, ripple effect and recommended tests. If nothing depends on the target, it reports that directly without calling the model.
+
+### Intent routing
+
+`orchestrator.py` resolves the file, function or directory named in a question (exact match first, then fuzzy matching) and routes it:
+
+| Intent | Example question |
+|---|---|
+| Repository overview | "Explain the whole repo and its purpose" |
+| Directory map or one directory | "Which directory does what?" |
+| All files walkthrough | "Explain each file one by one" |
+| Functions in a file | "What functions are in `routes.py`?" |
+| Function call tree and pipeline | "How are files and functions connected?" |
+| Function or file drill-down | "What does `route_and_execute_query` do?" |
+| Impact analysis | "What breaks if I change `clone_repository`?" |
+| Free-form repository Q&A | Any other question about the loaded repository |
+
+## API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/health` | Health check |
+| POST | `/clone` | Clone a repository, parse it, build the graph, return summary data |
+| POST | `/chat` | Conversational endpoint; routes the message by intent |
+| POST | `/ask` | Question about a specific function in a cloned repository |
+
+Interactive documentation is available at `http://127.0.0.1:8000/docs` when the backend is running.
+
+## Project Structure
+
+```text
 GitImpact/
+│
 ├── app/
-│   ├── main.py                     # FastAPI entry point
+│   ├── main.py                     # FastAPI application entry point
 │   ├── agents/
-│   │   ├── orchestrator.py         # Multi-intent routing & adaptive length engine
-│   │   ├── explainer_agent.py      # Architecture, repo, & file explainer agent
-│   │   └── impact_agent.py         # Change blast-radius & risk assessment agent
+│   │   ├── orchestrator.py         # intent routing, name matching, length modes
+│   │   ├── explainer_agent.py      # Groq client and explanation prompts
+│   │   └── impact_agent.py         # blast-radius explanation and test advice
 │   ├── api/
-│   │   └── routes.py               # REST API endpoints (/clone, /chat, /ask, /health)
+│   │   └── routes.py               # /clone, /chat, /ask, /health
 │   ├── database/
-│   │   └── db.py                   # SQLite persistence & metadata caching
+│   │   └── db.py                   # SQLite storage of analysed-repo metadata
 │   ├── graph/
-│   │   ├── builder.py              # AST dependency graph builder & Mermaid generator
-│   │   └── traversal.py            # Reverse BFS topological distance traversal
+│   │   ├── builder.py              # dependency graph and Mermaid generation
+│   │   └── traversal.py            # reverse BFS impact traversal
 │   ├── ingestion/
-│   │   └── cloner.py               # Shallow Git repository cloner & path sanitizer
+│   │   └── cloner.py               # shallow clone of public GitHub repositories
 │   └── parsing/
-│       ├── repo_scanner.py         # Directory mapper, tech stack detector, & README parser
-│       ├── python_parser.py        # Tree-sitter AST parser for Python
-│       ├── java_parser.py          # Tree-sitter AST parser for Java
-│       └── sql_parser.py           # SQL DDL schema parser
+│       ├── repo_scanner.py         # directory map, tech stack, entry points, catalog
+│       ├── python_parser.py        # tree-sitter parser for Python
+│       ├── java_parser.py          # tree-sitter parser for Java
+│       └── sql_parser.py           # CREATE TABLE parser
+│
 ├── frontend/
-│   └── app_ui.py                   # Streamlit dashboard & interactive chat workspace
-├── data/                           # Cloned repositories & SQLite database cache
-├── .env.example                    # Template for environment variables
-├── .gitignore                      # Git exclusion rules
-├── requirements.txt                # Pinned production dependencies
-└── README.md                       # Complete documentation
+│   └── app_ui.py                   # Streamlit studio (chat, graph, explorer, simulator)
+│
+├── data/
+│   ├── sample.java                 # sample input for the Java parser
+│   └── sample.sql                  # sample input for the SQL parser
+│
+├── run.py                          # starts the backend (if needed) and the UI
+├── requirements.txt
+└── .env.example                    # environment variable template
 ```
 
----
+Cloned repositories and `gitimpact.db` are created under `data/` at runtime and are git-ignored.
 
-## 🚀 Getting Started
+## Getting Started
 
-### 1. Prerequisites
-- **Python 3.10+** (tested with Python 3.10 – 3.13)
-- **Git** installed and available in your system path
-- A free **Groq API Key** (get one at [console.groq.com](https://console.groq.com))
+### Prerequisites
 
----
+- Python 3.10 or higher
+- Git available on your PATH
+- A Groq API key from [console.groq.com](https://console.groq.com)
 
-### 2. Installation
+### Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Khudbuddin/GitImpact.git
-   cd GitImpact
-   ```
+```bash
+git clone https://github.com/Khudbuddin/GitImpact.git
+cd GitImpact
 
-2. **Create and activate a virtual environment:**
-   ```bash
-   # Windows (PowerShell)
-   python -m venv venv
-   .\venv\Scripts\Activate.ps1
+python -m venv venv
+# Windows: venv\Scripts\activate
+source venv/bin/activate
 
-   # Linux / macOS
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+pip install -r requirements.txt
+cp .env.example .env
+```
 
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Open `.env` and set your key:
 
-4. **Configure environment variables:**
-   Copy the example `.env` file and insert your Groq API key:
-   ```bash
-   cp .env.example .env
-   ```
-   Open `.env` and set your key:
-   ```env
-   GROQ_API_KEY=gsk_your_groq_api_key_here
-   GROQ_MODEL=llama-3.3-70b-versatile
-   ```
+```env
+GROQ_API_KEY=your_groq_api_key
+GROQ_MODEL=llama-3.3-70b-versatile
+```
 
----
+| Variable | Purpose |
+|---|---|
+| `GROQ_API_KEY` | Required for AI answers. Without it, the app shows a setup notice instead of an answer. |
+| `GROQ_MODEL` | Groq model name. If unset, the code falls back to `openai/gpt-oss-120b`. |
 
-### 3. Running GitImpact
+### Running
 
-You will need **two terminal windows**: one for the backend API and one for the frontend UI.
+```bash
+python run.py
+```
 
-#### Terminal 1 — Start the FastAPI Backend:
+This starts the FastAPI backend on port 8000 (if it isn't already running) and the Streamlit app on port 8501. Open http://localhost:8501.
+
+To run them separately:
+
 ```bash
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-*The API will be live at `http://127.0.0.1:8000`. You can visit `http://127.0.0.1:8000/docs` for interactive Swagger documentation.*
-
-#### Terminal 2 — Start the Streamlit Frontend:
-```bash
 streamlit run frontend/app_ui.py
 ```
-*The web interface will open automatically in your browser at `http://localhost:8501`.*
 
----
+### Usage
 
-## 💡 Example Queries to Try
+1. Paste a public GitHub repository URL and select **Analyze Repository**.
+2. Use the four tabs: **AI Intelligence Chat**, **Interactive Dependency Graph** (file imports or function calls), **Codebase & Function Explorer**, and **Change Blast-Radius Simulator**.
+3. Ask questions in the chat, or paste another repository URL at any time to switch projects.
 
-Once you paste a repository URL (e.g. `https://github.com/Khudbuddin/Smart-Expense-Categorizer`), you can ask anything:
+## Limitations
 
-| Query Type | Example Prompt |
-| :--- | :--- |
-| **High-Level Overview** | *"Explain the whole repo and its purpose"* |
-| **Directory Map** | *"Which directory does what? Explain the folder structure."* |
-| **Architecture & Flow** | *"How are files connected and what is the data flow?"* |
-| **Main Entry Points** | *"What are the entry point files and how does execution start?"* |
-| **Specific Code** | *"What does the `classify_intent` function do in `orchestrator.py`?"* |
-| **Change Impact** | *"What will break if I change `clone_repository`?"* |
-| **Concise Summary** | *"Briefly summarize what this project does in 2 bullets"* |
-| **Deep Dive** | *"Walk me through the entire architecture step by step in detail"* |
+- Call and import links are resolved by name, so same-named functions in different files can be linked to each other.
+- Python, Java and SQL schemas are parsed. Other languages are counted for the tech stack but not analysed.
+- Only public GitHub repositories can be cloned.
+- Analysed repositories are held in memory and are cleared when the backend restarts.
 
----
+## Roadmap
 
-## 🛡️ License
+- Resolve calls and imports with scope and type information
+- Add parsers for JavaScript and TypeScript
+- Reload cached repositories from SQLite after a restart
+- Automated tests and a CI workflow
 
-This project is licensed under the **MIT License**.
+## Author
+
+Khudbuddin Sayyad, B.Sc. Data Science & AI, Mumbai
+[LinkedIn](https://linkedin.com/in/sayyad-khudbuddin) | [GitHub](https://github.com/Khudbuddin)
